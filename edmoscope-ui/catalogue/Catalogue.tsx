@@ -19,7 +19,7 @@ import {
   // Typography
   Heading, Eyebrow, Label,
   // Layout
-  AppShell, PageHeader, Section, Divider,
+  AppShell, PageHeader, Section, Divider, SideNavShell,
   // Navigation
   TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, Breadcrumb,
   // Feedback
@@ -377,6 +377,77 @@ export default function Catalogue(): React.ReactElement {
                 <SidebarItem label="Datasets"   icon="▣" badge={<Badge variant="default">42</Badge>} onClick={() => undefined} />
                 <SidebarItem label="Queries"    icon="⌕" onClick={() => undefined} />
               </Sidebar>
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── Layout: SideNavShell ─────────────────────────────────────── */}
+        <CatalogueSection title="SideNavShell">
+          <CatalogueExample
+            label="Vertical nav layout — full shell preview"
+            code={`<SideNavShell
+  topBar={<TopBar logo={<IDMLogo />} actions={<UserChip name="Julie Schmit" />} />}
+  nav={
+    <Sidebar>
+      <SidebarItem label="Overview"  icon="▣" isActive onClick={…} />
+      <SidebarItem label="Datasets"  icon="▤" onClick={…} />
+      <SidebarItem label="Queries"   icon="⌕" onClick={…} />
+      <SidebarItem label="Actors"    icon="◎" onClick={…} />
+    </Sidebar>
+  }
+>
+  <div style={{ padding: 32 }}>Page content here</div>
+</SideNavShell>`}
+          >
+            {/* Rendered in a fixed-height box so it doesn't take over the catalogue */}
+            <div style={{ height: 320, overflow: "hidden", border: "1px solid #D0D0CC", position: "relative" }}>
+              <SideNavShell
+                topBar={<TopBar logo={<IDMLogo compact />} actions={<UserChip name="Julie Schmit" />} />}
+                nav={
+                  <Sidebar>
+                    <SidebarItem label="Overview"  icon="▣" isActive onClick={() => undefined} />
+                    <SidebarItem label="Datasets"  icon="▤" onClick={() => undefined} />
+                    <SidebarItem label="Queries"   icon="⌕" onClick={() => undefined} />
+                    <SidebarItem label="Actors"    icon="◎" onClick={() => undefined} />
+                  </Sidebar>
+                }
+              >
+                <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif" }}>
+                  <PageHeader section="Overview" title="Dashboard" sub="Summary of catalogue activity" />
+                  <StatRow stats={[{ n: 42, label: "Assets" }, { n: "8", label: "Sources" }]} />
+                </div>
+              </SideNavShell>
+            </div>
+          </CatalogueExample>
+          <CatalogueExample
+            label="With navFooter slot"
+            code={`<SideNavShell
+  topBar={…}
+  nav={<Sidebar>…</Sidebar>}
+  navFooter={<span style={{ fontSize: 11, color: "#909090" }}>v0.1.0</span>}
+>
+  …
+</SideNavShell>`}
+          >
+            <div style={{ height: 280, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+              <SideNavShell
+                topBar={<TopBar logo={<IDMLogo compact />} />}
+                nav={
+                  <Sidebar>
+                    <SidebarItem label="Overview" icon="▣" isActive onClick={() => undefined} />
+                    <SidebarItem label="Datasets" icon="▤" onClick={() => undefined} />
+                  </Sidebar>
+                }
+                navFooter={
+                  <span style={{ fontFamily: "Montserrat, sans-serif", fontSize: 11, color: "#909090" }}>
+                    EDMoScope v0.1.0
+                  </span>
+                }
+              >
+                <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>
+                  Page content
+                </div>
+              </SideNavShell>
             </div>
           </CatalogueExample>
         </CatalogueSection>

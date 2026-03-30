@@ -45,6 +45,9 @@ export { PageHeader }             from "./layout/PageHeader.tsx";
 export type { PageHeaderProps }   from "./layout/PageHeader.tsx";
 
 export { Section }                from "./layout/Section.tsx";
+
+export { SideNavShell }           from "./layout/SideNavShell.tsx";
+export type { SideNavShellProps } from "./layout/SideNavShell.tsx";
 export type { SectionProps }      from "./layout/Section.tsx";
 
 export { Divider }                from "./layout/Divider.tsx";
