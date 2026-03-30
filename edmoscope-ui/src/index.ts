@@ -105,6 +105,9 @@ export type { StatCardProps, StatRowProps } from "./data/StatCard.tsx";
 export { TierBadge }              from "./data/TierBadge.tsx";
 export type { TierBadgeProps }    from "./data/TierBadge.tsx";
 
+export { SqlWorkbench }           from "./data/SqlWorkbench.tsx";
+export type { SqlWorkbenchProps } from "./data/SqlWorkbench.tsx";
+
 // ── Overlays ──────────────────────────────────────────────────────────────────
 export { Modal }                  from "./overlays/Modal.tsx";
 export type { ModalProps }        from "./overlays/Modal.tsx";

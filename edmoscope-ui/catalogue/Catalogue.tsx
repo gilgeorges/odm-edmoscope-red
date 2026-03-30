@@ -27,7 +27,7 @@ import {
   // Forms
   Input, Textarea, Select, SearchBox, FilterBar,
   // Data
-  DataTable, MetadataList, StatCard, StatRow, TierBadge,
+  DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench,
   // Overlays
   Modal, Drawer, ConfirmDialog,
   // Tokens
@@ -177,6 +177,83 @@ const SAMPLE_FILTERS: FilterDefinition[] = [
     options: [{ value: "bronze", label: "Bronze" }, { value: "silver", label: "Silver" }, { value: "gold", label: "Gold" }] },
   { key: "fresh", type: "toggle", label: "Current only" },
 ];
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SqlWorkbench demo section
+───────────────────────────────────────────────────────────────────────────── */
+type SqlResultRow = { id: string; name: string; count: number; updated: string };
+
+const SQL_RESULT_COLUMNS: ColumnDef<SqlResultRow>[] = [
+  { key: "id",      header: "ID",      cellClassName: "font-mono text-[11px] text-odm-muted" },
+  { key: "name",    header: "Dataset"  },
+  { key: "count",   header: "Rows",    cellClassName: "tabular-nums" },
+  { key: "updated", header: "Updated"  },
+];
+
+const SQL_RESULT_DATA: SqlResultRow[] = [
+  { id: "DS-001", name: "MobiScout Count Data",    count: 14_820, updated: "2026-03-28" },
+  { id: "DS-002", name: "SEBES Traffic Counts",    count:  3_410, updated: "2026-03-25" },
+  { id: "DS-003", name: "Raw ANPR Readings",       count: 97_003, updated: "2026-03-30" },
+];
+
+function SqlWorkbenchSection(): React.ReactElement {
+  const [results, setResults] = useState<SqlResultRow[] | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+
+  function handleRun(_sql: string, _name: string): void {
+    setResults(undefined);
+    setLoading(true);
+    // Simulate async query
+    setTimeout(() => {
+      setLoading(false);
+      setResults(SQL_RESULT_DATA);
+    }, 1200);
+  }
+
+  return (
+    <CatalogueSection title="SqlWorkbench">
+      <CatalogueExample
+        label="Collapsed (default state)"
+        code={`<SqlWorkbench
+  defaultQueryName="Top datasets"
+  defaultSql="SELECT * FROM datasets LIMIT 20"
+  onRun={(sql, name) => fetchResults(sql)}
+/>`}
+        bg="#EFEFED"
+      >
+        <SqlWorkbench
+          defaultQueryName="Top datasets"
+          defaultSql="SELECT * FROM datasets LIMIT 20"
+          onRun={() => undefined}
+        />
+      </CatalogueExample>
+
+      <CatalogueExample
+        label="Open state — editor visible"
+        code={`<SqlWorkbench
+  defaultState="open"
+  defaultQueryName="Count by tier"
+  defaultSql="SELECT tier, COUNT(*) AS n&#10;FROM datasets&#10;GROUP BY tier"
+  onRun={(sql, name) => fetchResults(sql)}
+  resultColumns={cols}
+  resultData={rows}
+  loading={isLoading}
+/>`}
+        bg="#EFEFED"
+      >
+        <SqlWorkbench
+          defaultState="open"
+          defaultQueryName="Count by tier"
+          defaultSql={"SELECT tier, COUNT(*) AS n\nFROM datasets\nGROUP BY tier"}
+          onRun={handleRun}
+          resultColumns={SQL_RESULT_COLUMNS as ColumnDef<Record<string, unknown>>[]}
+          resultData={results as Record<string, unknown>[] | undefined}
+          loading={loading}
+        />
+      </CatalogueExample>
+    </CatalogueSection>
+  );
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Main Catalogue component
@@ -745,6 +822,9 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
             <DataTable columns={SAMPLE_COLUMNS} data={[]} />
           </CatalogueExample>
         </CatalogueSection>
+
+        {/* ── Data: SqlWorkbench ───────────────────────────────────────── */}
+        <SqlWorkbenchSection />
 
         {/* ── Overlays: Modal ───────────────────────────────────────────── */}
         <CatalogueSection title="Modal">
