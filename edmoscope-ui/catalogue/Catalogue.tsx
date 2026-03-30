@@ -19,9 +19,9 @@ import {
   // Typography
   Heading, Eyebrow, Label,
   // Layout
-  AppShell, PageHeader, Section, Divider, SideNavShell,
+  AppShell, PageHeader, Section, Divider, TopNavShell,
   // Navigation
-  TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, Breadcrumb, GlobalSearch,
+  TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, NavTab, Breadcrumb, GlobalSearch,
   // Feedback
   EmptyState, ErrorBoundary, ToastProvider, useToast,
   // Forms
@@ -407,56 +407,94 @@ export default function Catalogue(): React.ReactElement {
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Layout: SideNavShell ─────────────────────────────────────── */}
-        <CatalogueSection title="SideNavShell">
+        {/* ── Layout: TopNavShell ──────────────────────────────────────── */}
+        <CatalogueSection title="TopNavShell">
           <CatalogueExample
-            label="Full shell — logo + search + nav + footer"
-            code={`<SideNavShell
-  logo={<IDMLogo compact />}
-  search={
-    <GlobalSearch
-      open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)}
-      query={query} onQueryChange={setQuery} results={results} onSelect={handleSelect}
-    />
-  }
+            label="Dark nav bar — tabs + search + right action"
+            code={`<TopNavShell
   nav={
-    <Sidebar>
-      <SidebarItem label="Overview"  icon="▣" isActive onClick={() => navigate("/")} />
-      <SidebarItem label="Datasets"  icon="▤" onClick={() => navigate("/datasets")} />
-      <SidebarItem label="Queries"   icon="⌕" onClick={() => navigate("/queries")} />
-      <SidebarItem label="Actors"    icon="◎" onClick={() => navigate("/actors")} />
-    </Sidebar>
+    <>
+      <NavTab label="Home"    onClick={() => navigate("/")} />
+      <NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+      <NavTab label="Actors"  onClick={() => navigate("/actors")} />
+      <NavTab label="Queries" onClick={() => navigate("/queries")} />
+    </>
   }
-  navFooter={<UserChip name="Julie Schmit" />}
+  search={
+    <div className="w-44">
+      <GlobalSearch
+        open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)}
+        query={query} onQueryChange={setQuery} results={results} onSelect={handleSelect}
+        placeholder="Search…"
+      />
+    </div>
+  }
+  actions={<button className="...">SQL ▼</button>}
 >
   <Outlet />
-</SideNavShell>`}
+</TopNavShell>`}
           >
-            <div style={{ height: 360, overflow: "hidden", border: "1px solid #D0D0CC" }}>
-              <SideNavShell
-                logo={<IDMLogo compact />}
-                search={
-                  <GlobalSearch
-                    open={false} onOpen={() => undefined} onClose={() => undefined}
-                    query="" onQueryChange={() => undefined} results={[]} onSelect={() => undefined}
-                    placeholder="Search…"
-                  />
-                }
+            <div style={{ height: 280, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+              <TopNavShell
                 nav={
-                  <Sidebar>
-                    <SidebarItem label="Overview"  icon="▣" isActive onClick={() => undefined} />
-                    <SidebarItem label="Datasets"  icon="▤" onClick={() => undefined} />
-                    <SidebarItem label="Queries"   icon="⌕" onClick={() => undefined} />
-                    <SidebarItem label="Actors"    icon="◎" onClick={() => undefined} />
-                  </Sidebar>
+                  <>
+                    <NavTab label="Home"    onClick={() => undefined} />
+                    <NavTab label="Data"    isActive onClick={() => undefined} />
+                    <NavTab label="Actors"  onClick={() => undefined} />
+                    <NavTab label="Queries" onClick={() => undefined} />
+                  </>
                 }
-                navFooter={<UserChip name="Julie Schmit" />}
+                search={
+                  <div className="w-44">
+                    <GlobalSearch
+                      open={false} onOpen={() => undefined} onClose={() => undefined}
+                      query="" onQueryChange={() => undefined} results={[]} onSelect={() => undefined}
+                      placeholder="Search…"
+                    />
+                  </div>
+                }
+                actions={
+                  <button className="font-sans text-xs font-semibold text-lux-red bg-odm-ink border border-lux-red/40 px-3 py-1 cursor-pointer hover:border-lux-red transition-colors">
+                    SQL ▼
+                  </button>
+                }
               >
                 <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif" }}>
-                  <PageHeader section="Overview" title="Dashboard" sub="Summary of catalogue activity" />
-                  <StatRow stats={[{ n: 42, label: "Assets" }, { n: "8", label: "Sources" }]} />
+                  <PageHeader section="Data Catalogue · DCAT-AP" title="Data Assets" sub="12 of 12 assets" />
+                  <StatRow stats={[{ n: 12, label: "Assets" }, { n: "4", label: "Sources" }]} />
                 </div>
-              </SideNavShell>
+              </TopNavShell>
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Minimal — nav tabs only"
+            code={`<TopNavShell
+  nav={
+    <>
+      <NavTab label="Home"    onClick={() => navigate("/")} />
+      <NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+      <NavTab label="Actors"  onClick={() => navigate("/actors")} />
+    </>
+  }
+>
+  <Outlet />
+</TopNavShell>`}
+          >
+            <div style={{ height: 160, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+              <TopNavShell
+                nav={
+                  <>
+                    <NavTab label="Home"   onClick={() => undefined} />
+                    <NavTab label="Data"   isActive onClick={() => undefined} />
+                    <NavTab label="Actors" onClick={() => undefined} />
+                  </>
+                }
+              >
+                <div style={{ padding: 24, fontFamily: "Montserrat, sans-serif", color: "#5A5A59", fontSize: 13 }}>
+                  Page content area
+                </div>
+              </TopNavShell>
             </div>
           </CatalogueExample>
         </CatalogueSection>

@@ -46,8 +46,8 @@ export type { PageHeaderProps }   from "./layout/PageHeader.tsx";
 
 export { Section }                from "./layout/Section.tsx";
 
-export { SideNavShell }           from "./layout/SideNavShell.tsx";
-export type { SideNavShellProps } from "./layout/SideNavShell.tsx";
+export { TopNavShell }            from "./layout/TopNavShell.tsx";
+export type { TopNavShellProps }  from "./layout/TopNavShell.tsx";
 export type { SectionProps }      from "./layout/Section.tsx";
 
 export { Divider }                from "./layout/Divider.tsx";
@@ -59,6 +59,9 @@ export type { TopBarProps, IDMLogoProps, LuxLionProps, UserChipProps } from "./n
 
 export { Sidebar, SidebarItem }   from "./navigation/Sidebar.tsx";
 export type { SidebarProps, SidebarItemProps } from "./navigation/Sidebar.tsx";
+
+export { NavTab }                 from "./navigation/NavTab.tsx";
+export type { NavTabProps }       from "./navigation/NavTab.tsx";
 
 export { Breadcrumb }             from "./navigation/Breadcrumb.tsx";
 export type { BreadcrumbProps, BreadcrumbItem } from "./navigation/Breadcrumb.tsx";
