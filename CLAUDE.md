@@ -38,7 +38,7 @@ Never push to `main` without explicit permission.
 | Build | None (consumed as submodule by host app's Vite) |
 | Catalogue preview | `npm run catalogue` inside `edmoscope-ui/` |
 | Catalogue build | `npm run build:catalogue` → `catalogue/dist/` |
-| Catalogue live URL | https://gilgeorges.github.io/odm-edmoscope-red/ (GitHub Pages, auto-deployed) |
+| Catalogue live URL | Netlify — configured via `netlify.toml` at repo root |
 
 ---
 

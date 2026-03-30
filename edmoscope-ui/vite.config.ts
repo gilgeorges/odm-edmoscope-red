@@ -6,16 +6,12 @@ import path from "path";
 /**
  * Vite config for the EDMoScope UI catalogue.
  *
- * Dev:   npx vite catalogue/          (served at localhost)
- * Build: npx vite build catalogue/    (outputs to catalogue/dist/)
- *
- * The base path is set to the GitHub Pages project URL so asset paths
- * resolve correctly when deployed to https://<owner>.github.io/<repo>/.
- * Override with VITE_BASE env var for other deployment targets.
+ * Dev:   npm run catalogue   (served at localhost)
+ * Build: npm run build:catalogue   (outputs to catalogue/dist/)
  */
 export default defineConfig({
   root: "catalogue",
-  base: process.env["VITE_BASE"] ?? "/odm-edmoscope-red/",
+  base: "/",
   plugins: [
     react(),
     tailwindcss(),
