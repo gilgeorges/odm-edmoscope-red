@@ -410,15 +410,14 @@ export default function Catalogue(): React.ReactElement {
         {/* ── Layout: TopNavShell ──────────────────────────────────────── */}
         <CatalogueSection title="TopNavShell">
           <CatalogueExample
-            label="Full shell — logo + nav tabs + search + user chip"
+            label="Dark nav bar — tabs + search + right action"
             code={`<TopNavShell
-  logo={<IDMLogo compact />}
   nav={
     <>
-      <NavTab label="Overview"  icon="▣" isActive onClick={() => navigate("/")} />
-      <NavTab label="Datasets"  icon="▤" onClick={() => navigate("/datasets")} />
-      <NavTab label="Queries"   icon="⌕" onClick={() => navigate("/queries")} />
-      <NavTab label="Actors"    icon="◎" onClick={() => navigate("/actors")} />
+      <NavTab label="Home"    onClick={() => navigate("/")} />
+      <NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+      <NavTab label="Actors"  onClick={() => navigate("/actors")} />
+      <NavTab label="Queries" onClick={() => navigate("/queries")} />
     </>
   }
   search={
@@ -426,23 +425,23 @@ export default function Catalogue(): React.ReactElement {
       <GlobalSearch
         open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)}
         query={query} onQueryChange={setQuery} results={results} onSelect={handleSelect}
+        placeholder="Search…"
       />
     </div>
   }
-  actions={<UserChip name="Julie Schmit" />}
+  actions={<button className="...">SQL ▼</button>}
 >
   <Outlet />
 </TopNavShell>`}
           >
-            <div style={{ height: 320, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+            <div style={{ height: 280, overflow: "hidden", border: "1px solid #D0D0CC" }}>
               <TopNavShell
-                logo={<IDMLogo compact />}
                 nav={
                   <>
-                    <NavTab label="Overview"  icon="▣" isActive onClick={() => undefined} />
-                    <NavTab label="Datasets"  icon="▤" onClick={() => undefined} />
-                    <NavTab label="Queries"   icon="⌕" onClick={() => undefined} />
-                    <NavTab label="Actors"    icon="◎" onClick={() => undefined} />
+                    <NavTab label="Home"    onClick={() => undefined} />
+                    <NavTab label="Data"    isActive onClick={() => undefined} />
+                    <NavTab label="Actors"  onClick={() => undefined} />
+                    <NavTab label="Queries" onClick={() => undefined} />
                   </>
                 }
                 search={
@@ -454,41 +453,45 @@ export default function Catalogue(): React.ReactElement {
                     />
                   </div>
                 }
-                actions={<UserChip name="Julie Schmit" />}
+                actions={
+                  <button className="font-sans text-xs font-semibold text-lux-red bg-odm-ink border border-lux-red/40 px-3 py-1 cursor-pointer hover:border-lux-red transition-colors">
+                    SQL ▼
+                  </button>
+                }
               >
                 <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif" }}>
-                  <PageHeader section="Overview" title="Dashboard" sub="Summary of catalogue activity" />
-                  <StatRow stats={[{ n: 42, label: "Assets" }, { n: "8", label: "Sources" }]} />
+                  <PageHeader section="Data Catalogue · DCAT-AP" title="Data Assets" sub="12 of 12 assets" />
+                  <StatRow stats={[{ n: 12, label: "Assets" }, { n: "4", label: "Sources" }]} />
                 </div>
               </TopNavShell>
             </div>
           </CatalogueExample>
 
           <CatalogueExample
-            label="Nav tabs only (no logo, no search)"
+            label="Minimal — nav tabs only"
             code={`<TopNavShell
   nav={
     <>
-      <NavTab label="Overview" isActive onClick={() => navigate("/")} />
-      <NavTab label="Datasets" onClick={() => navigate("/datasets")} />
-      <NavTab label="Reports"  onClick={() => navigate("/reports")} />
+      <NavTab label="Home"    onClick={() => navigate("/")} />
+      <NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+      <NavTab label="Actors"  onClick={() => navigate("/actors")} />
     </>
   }
 >
   <Outlet />
 </TopNavShell>`}
           >
-            <div style={{ height: 200, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+            <div style={{ height: 160, overflow: "hidden", border: "1px solid #D0D0CC" }}>
               <TopNavShell
                 nav={
                   <>
-                    <NavTab label="Overview" isActive onClick={() => undefined} />
-                    <NavTab label="Datasets" onClick={() => undefined} />
-                    <NavTab label="Reports"  onClick={() => undefined} />
+                    <NavTab label="Home"   onClick={() => undefined} />
+                    <NavTab label="Data"   isActive onClick={() => undefined} />
+                    <NavTab label="Actors" onClick={() => undefined} />
                   </>
                 }
               >
-                <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif", color: "#5A5A59", fontSize: 13 }}>
+                <div style={{ padding: 24, fontFamily: "Montserrat, sans-serif", color: "#5A5A59", fontSize: 13 }}>
                   Page content area
                 </div>
               </TopNavShell>

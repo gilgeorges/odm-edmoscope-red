@@ -1,25 +1,24 @@
 import React from "react";
 
 /**
- * TopNavShell — application shell with a full-width horizontal navigation bar.
+ * TopNavShell — application shell with a single dark horizontal navigation bar.
  *
- * The top bar contains: logo (left) | nav tabs (centre-left) | search + actions (right).
- * The main content area scrolls below the fixed-height header.
+ * The bar sits sticky at the top and contains: logo (optional, left) |
+ * nav tabs (left-to-centre) | search + actions (right). Page content
+ * scrolls below.
  *
  * Compose the `nav` slot with `NavTab` items.
- * Compose the `search` slot with `GlobalSearch` (trigger button only —
- * GlobalSearch renders its own fullscreen overlay).
- * Compose the `actions` slot with `UserChip`, notification buttons, etc.
+ * Compose the `search` slot with `GlobalSearch`.
+ * Compose the `actions` slot with `UserChip`, a SQL workbench toggle, etc.
  *
  * @example
  * <TopNavShell
- *   logo={<IDMLogo compact />}
  *   nav={
  *     <>
- *       <NavTab label="Overview"  icon="▣" isActive onClick={() => navigate("/")} />
- *       <NavTab label="Datasets"  icon="▤" onClick={() => navigate("/datasets")} />
- *       <NavTab label="Queries"   icon="⌕" onClick={() => navigate("/queries")} />
- *       <NavTab label="Actors"    icon="◎" onClick={() => navigate("/actors")} />
+ *       <NavTab label="Home"    onClick={() => navigate("/")} />
+ *       <NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+ *       <NavTab label="Actors"  onClick={() => navigate("/actors")} />
+ *       <NavTab label="Queries" onClick={() => navigate("/queries")} />
  *     </>
  *   }
  *   search={
@@ -33,7 +32,7 @@ import React from "react";
  *       onSelect={r => navigate(`/datasets/${r.id}`)}
  *     />
  *   }
- *   actions={<UserChip name="Julie Schmit" />}
+ *   actions={<SqlWorkbenchToggle />}
  * >
  *   <Outlet />
  * </TopNavShell>
@@ -42,23 +41,23 @@ export interface TopNavShellProps {
   /**
    * Logo / wordmark rendered at the left of the nav bar.
    * Use `<IDMLogo compact />` or a custom element.
+   * When omitted the nav tabs start immediately from the left.
    */
   logo?: React.ReactNode;
   /**
    * Primary navigation tabs. Compose with `NavTab` elements.
-   * Rendered in a flex row adjacent to the logo.
+   * Rendered in a flex row filling the available horizontal space.
    */
   nav?: React.ReactNode;
   /**
    * Search control rendered in the right section of the bar.
-   * Pass a `<GlobalSearch … />` — its trigger button fills this slot and its
-   * overlay renders in a portal above everything else.
-   * Wrap in a sized container (e.g. `<div className="w-44">`) to constrain width.
+   * Pass a `<GlobalSearch … />`. Wrap in a sized container (e.g.
+   * `<div className="w-44">`) to constrain the trigger button width.
    */
   search?: React.ReactNode;
   /**
    * Right-side action controls rendered after the search slot.
-   * Typical use: `<UserChip name="…" />`, notification icons, a sign-out button.
+   * Typical use: SQL workbench toggle, `<UserChip />`, notification icons.
    */
   actions?: React.ReactNode;
   /**
@@ -67,8 +66,8 @@ export interface TopNavShellProps {
    */
   drawer?: React.ReactNode;
   /**
-   * Tailwind bottom-padding utility class applied to `<main>` to clear the drawer
-   * tab strip. Example: `"pb-24"`.
+   * Tailwind bottom-padding utility class applied to `<main>` to clear the
+   * drawer tab strip. Example: `"pb-24"`.
    * @default ""
    */
   drawerClearance?: string;
@@ -103,32 +102,34 @@ export function TopNavShell({
       {/* ── Nav bar ── */}
       <header
         role="banner"
-        className="flex-shrink-0 bg-white border-b-[3px] border-b-lux-red"
+        className="sticky top-0 z-[100] flex-shrink-0 bg-odm-ink"
       >
-        <div className="flex items-stretch h-14 px-6">
+        <div className="flex items-stretch h-11 px-7 overflow-x-auto [scrollbar-width:none]">
 
           {/* Logo */}
           {logo && (
-            <div className="flex items-center flex-shrink-0 pr-5 mr-2 border-r border-odm-line-l">
+            <div className="flex items-center flex-shrink-0 pr-5 mr-1">
               {logo}
             </div>
           )}
 
           {/* Nav tabs */}
           {nav && (
-            <nav
-              aria-label="Primary navigation"
-              className="flex items-stretch flex-1 min-w-0 px-2"
-            >
+            <nav aria-label="Primary navigation" className="flex items-stretch">
               {nav}
             </nav>
           )}
 
+          {/* Spacer */}
+          <div className="flex-1" />
+
           {/* Right slot: search + actions */}
-          <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-            {search}
-            {actions}
-          </div>
+          {(search || actions) && (
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {search}
+              {actions}
+            </div>
+          )}
 
         </div>
       </header>
