@@ -19,9 +19,9 @@ import {
   // Typography
   Heading, Eyebrow, Label,
   // Layout
-  AppShell, PageHeader, Section, Divider, SideNavShell,
+  AppShell, PageHeader, Section, Divider, TopNavShell,
   // Navigation
-  TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, Breadcrumb, GlobalSearch,
+  TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, NavTab, Breadcrumb, GlobalSearch,
   // Feedback
   EmptyState, ErrorBoundary, ToastProvider, useToast,
   // Forms
@@ -407,56 +407,91 @@ export default function Catalogue(): React.ReactElement {
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Layout: SideNavShell ─────────────────────────────────────── */}
-        <CatalogueSection title="SideNavShell">
+        {/* ── Layout: TopNavShell ──────────────────────────────────────── */}
+        <CatalogueSection title="TopNavShell">
           <CatalogueExample
-            label="Full shell — logo + search + nav + footer"
-            code={`<SideNavShell
+            label="Full shell — logo + nav tabs + search + user chip"
+            code={`<TopNavShell
   logo={<IDMLogo compact />}
-  search={
-    <GlobalSearch
-      open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)}
-      query={query} onQueryChange={setQuery} results={results} onSelect={handleSelect}
-    />
-  }
   nav={
-    <Sidebar>
-      <SidebarItem label="Overview"  icon="▣" isActive onClick={() => navigate("/")} />
-      <SidebarItem label="Datasets"  icon="▤" onClick={() => navigate("/datasets")} />
-      <SidebarItem label="Queries"   icon="⌕" onClick={() => navigate("/queries")} />
-      <SidebarItem label="Actors"    icon="◎" onClick={() => navigate("/actors")} />
-    </Sidebar>
+    <>
+      <NavTab label="Overview"  icon="▣" isActive onClick={() => navigate("/")} />
+      <NavTab label="Datasets"  icon="▤" onClick={() => navigate("/datasets")} />
+      <NavTab label="Queries"   icon="⌕" onClick={() => navigate("/queries")} />
+      <NavTab label="Actors"    icon="◎" onClick={() => navigate("/actors")} />
+    </>
   }
-  navFooter={<UserChip name="Julie Schmit" />}
+  search={
+    <div className="w-44">
+      <GlobalSearch
+        open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)}
+        query={query} onQueryChange={setQuery} results={results} onSelect={handleSelect}
+      />
+    </div>
+  }
+  actions={<UserChip name="Julie Schmit" />}
 >
   <Outlet />
-</SideNavShell>`}
+</TopNavShell>`}
           >
-            <div style={{ height: 360, overflow: "hidden", border: "1px solid #D0D0CC" }}>
-              <SideNavShell
+            <div style={{ height: 320, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+              <TopNavShell
                 logo={<IDMLogo compact />}
-                search={
-                  <GlobalSearch
-                    open={false} onOpen={() => undefined} onClose={() => undefined}
-                    query="" onQueryChange={() => undefined} results={[]} onSelect={() => undefined}
-                    placeholder="Search…"
-                  />
-                }
                 nav={
-                  <Sidebar>
-                    <SidebarItem label="Overview"  icon="▣" isActive onClick={() => undefined} />
-                    <SidebarItem label="Datasets"  icon="▤" onClick={() => undefined} />
-                    <SidebarItem label="Queries"   icon="⌕" onClick={() => undefined} />
-                    <SidebarItem label="Actors"    icon="◎" onClick={() => undefined} />
-                  </Sidebar>
+                  <>
+                    <NavTab label="Overview"  icon="▣" isActive onClick={() => undefined} />
+                    <NavTab label="Datasets"  icon="▤" onClick={() => undefined} />
+                    <NavTab label="Queries"   icon="⌕" onClick={() => undefined} />
+                    <NavTab label="Actors"    icon="◎" onClick={() => undefined} />
+                  </>
                 }
-                navFooter={<UserChip name="Julie Schmit" />}
+                search={
+                  <div className="w-44">
+                    <GlobalSearch
+                      open={false} onOpen={() => undefined} onClose={() => undefined}
+                      query="" onQueryChange={() => undefined} results={[]} onSelect={() => undefined}
+                      placeholder="Search…"
+                    />
+                  </div>
+                }
+                actions={<UserChip name="Julie Schmit" />}
               >
                 <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif" }}>
                   <PageHeader section="Overview" title="Dashboard" sub="Summary of catalogue activity" />
                   <StatRow stats={[{ n: 42, label: "Assets" }, { n: "8", label: "Sources" }]} />
                 </div>
-              </SideNavShell>
+              </TopNavShell>
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Nav tabs only (no logo, no search)"
+            code={`<TopNavShell
+  nav={
+    <>
+      <NavTab label="Overview" isActive onClick={() => navigate("/")} />
+      <NavTab label="Datasets" onClick={() => navigate("/datasets")} />
+      <NavTab label="Reports"  onClick={() => navigate("/reports")} />
+    </>
+  }
+>
+  <Outlet />
+</TopNavShell>`}
+          >
+            <div style={{ height: 200, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+              <TopNavShell
+                nav={
+                  <>
+                    <NavTab label="Overview" isActive onClick={() => undefined} />
+                    <NavTab label="Datasets" onClick={() => undefined} />
+                    <NavTab label="Reports"  onClick={() => undefined} />
+                  </>
+                }
+              >
+                <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif", color: "#5A5A59", fontSize: 13 }}>
+                  Page content area
+                </div>
+              </TopNavShell>
             </div>
           </CatalogueExample>
         </CatalogueSection>
