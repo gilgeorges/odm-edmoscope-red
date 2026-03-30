@@ -57,7 +57,7 @@ export function Select({
         "block w-full font-sans text-[13px] text-odm-ink",
         "bg-odm-surface border border-odm-line border-b-2",
         "px-2.5 py-1.5 outline-none appearance-none cursor-pointer",
-        "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23606060'/%3E%3C/svg%3E\")] bg-no-repeat bg-[right_10px_center] bg-[length:10px_6px] pr-8",
+        "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23606060' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E\")] bg-no-repeat bg-[right_10px_center] bg-[length:10px_6px] pr-8",
         "transition-colors duration-100",
         error
           ? "border-b-odm-bad-bd focus:border-odm-bad-bd"
