@@ -1,0 +1,13 @@
+# Netlify build configuration for the EDMoScope UI catalogue.
+#
+# In the Netlify dashboard:
+#   Repository:        gilgeorges/odm-edmoscope-red
+#   (everything else is read from this file — no manual dashboard config needed)
+
+[build]
+  base    = "edmoscope-ui"
+  command = "npm install && npm run build:catalogue"
+  publish = "catalogue/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
