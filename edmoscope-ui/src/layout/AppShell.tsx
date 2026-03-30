@@ -1,47 +1,34 @@
-import React, { useState } from "react";
+import React from "react";
 
 /**
- * AppShell — root layout shell for EDMoScope.
- *
- * Composes a sticky header (TopBar + primary navigation), a collapsible
- * sidebar, a main content area, and an optional bottom drawer slot.
- * Occupies the full viewport height.
- *
- * The sidebar collapse state is managed internally — no need to lift it.
- * Navigation items receive an `isActive` prop from the consumer; the shell
- * itself has no routing knowledge.
- *
- * Accessibility:
- * - Skip-navigation link is the first focusable element, visible on focus.
- * - Main content is `<main id="main-content">`.
- * - Sidebar is `<aside aria-label="Sidebar navigation">`.
- *
- * @example
- * <AppShell
- *   topBar={<TopBar logo={<IDMLogo />} actions={<GlobalSearch />} />}
- *   navigation={NAV_ITEMS}
- *   activeNavId="datasets"
- *   onNavSelect={id => router.navigate({ to: `/${id}` })}
- * >
- *   <Outlet />
- * </AppShell>
+ * NavItem — a single entry in the primary horizontal navigation bar.
  */
-
 export interface NavItem {
   /** Unique identifier used to match against `activeNavId`. */
   id: string;
   /** Full label shown on desktop. */
   label: string;
-  /** Abbreviated label shown on mobile. */
+  /** Abbreviated label shown on mobile (falls back to `label` if omitted). */
   short?: string;
 }
 
+/**
+ * AppShellProps — props for the AppShell layout component.
+ */
 export interface AppShellProps {
-  /** Content for the sticky top bar (logo, search, user chip, etc.). */
-  topBar: React.ReactNode;
   /**
-   * Navigation items for the primary horizontal nav bar.
-   * Rendered as a dark bar below the top bar.
+   * Optional logo bar rendered above the primary navigation.
+   *
+   * Displayed on a white background with a 3px `lux-red` bottom border —
+   * the Luxembourg government identity band. Typically contains the
+   * government logo, organisation name, a search button, and a user chip.
+   *
+   * When omitted only the dark navigation bar is rendered in the header.
+   */
+  logoBar?: React.ReactNode;
+  /**
+   * Navigation items for the primary horizontal nav bar
+   * (dark `odm-ink` background, lux-red active indicator).
    */
   navigation: NavItem[];
   /** The id of the currently active navigation item. */
@@ -49,31 +36,79 @@ export interface AppShellProps {
   /** Called when a nav item is clicked. */
   onNavSelect?: (id: string) => void;
   /**
-   * Additional content slot on the right side of the nav bar
-   * (e.g. SQL workbench toggle button).
+   * Additional content rendered on the right side of the nav bar
+   * (e.g. an SQL workbench toggle button).
    */
   navRightSlot?: React.ReactNode;
   /**
-   * Optional bottom-anchored overlay (e.g. DrawerPanel for SQL workbench).
-   * Rendered outside the main scroll flow, fixed to the viewport bottom.
+   * Optional footer rendered below the main content area.
+   *
+   * Matches the dark nav bar background with a 3px `lux-red` top border.
+   * Typically shows the organisation name, copyright, and standard references.
+   */
+  footer?: React.ReactNode;
+  /**
+   * Optional fixed-bottom overlay — rendered outside the normal scroll flow.
+   * Use this for the SqlWorkbench drawer.
    */
   drawer?: React.ReactNode;
   /**
-   * Additional bottom padding applied to `<main>` to clear the drawer tab strip.
-   * Pass the height of the drawer's collapsed tab strip (default 36px).
+   * Bottom padding added to `<main>` to clear the collapsed drawer tab strip.
+   * Set this to the drawer's collapsed height (36px by default).
    * @default 36
    */
   drawerClearance?: number;
-  /** Page content. */
+  /** Page content rendered inside `<main>`. */
   children: React.ReactNode;
 }
 
+/**
+ * AppShell — root layout shell for EDMoScope.
+ *
+ * Composes a sticky header with an optional logo bar and a primary
+ * horizontal navigation bar, a main content area, an optional footer, and
+ * an optional fixed-bottom drawer slot (for the SQL Workbench).
+ *
+ * The layout matches `observatory-catalog.jsx`:
+ * - **logoBar** — white row, 3px lux-red bottom border (Luxembourg identity)
+ * - **nav bar** — dark `odm-ink` background, lux-red active indicator
+ * - **main** — full-width flex-1, bottom padding adjusts for drawer
+ * - **footer** — dark, 3px lux-red top border, optional
+ * - **drawer** — fixed-position, outside scroll flow
+ *
+ * Accessibility:
+ * - Skip-navigation link is the first focusable element, visible on focus.
+ * - Main content is `<main id="main-content">`.
+ * - Primary nav is `<nav aria-label="Primary navigation">`.
+ *
+ * @example
+ * <AppShell
+ *   logoBar={
+ *     <div className="flex items-center gap-4 px-7 py-3">
+ *       <IDMLogo />
+ *       <div className="flex-1" />
+ *       <GlobalSearch />
+ *       <UserChip name="Nadine Hess" />
+ *     </div>
+ *   }
+ *   navigation={NAV_ITEMS}
+ *   activeNavId="datasets"
+ *   onNavSelect={id => setPage(id)}
+ *   navRightSlot={<SqlToggleBtn />}
+ *   footer={<AppFooter />}
+ *   drawer={<SqlWorkbench … />}
+ *   drawerClearance={36}
+ * >
+ *   <Outlet />
+ * </AppShell>
+ */
 export function AppShell({
-  topBar,
+  logoBar,
   navigation,
   activeNavId,
   onNavSelect,
   navRightSlot,
+  footer,
   drawer,
   drawerClearance = 36,
   children,
@@ -93,11 +128,16 @@ export function AppShell({
         Skip to main content
       </a>
 
-      {/* Sticky header: top bar + nav bar */}
+      {/* Sticky header */}
       <header className="sticky top-0 z-[100]">
-        {topBar}
+        {/* Logo bar — white, 3px lux-red bottom border */}
+        {logoBar && (
+          <div className="bg-white border-b-[3px] border-lux-red">
+            {logoBar}
+          </div>
+        )}
 
-        {/* Primary navigation bar */}
+        {/* Primary navigation bar — dark background */}
         <nav aria-label="Primary navigation" className="bg-odm-ink">
           <div className="max-w-[1036px] mx-auto px-7 flex overflow-x-auto [scrollbar-width:none]">
             {navigation.map((item) => {
@@ -105,6 +145,7 @@ export function AppShell({
               return (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => onNavSelect?.(item.id)}
                   aria-current={isActive ? "page" : undefined}
                   className={[
@@ -113,8 +154,8 @@ export function AppShell({
                     "transition-colors duration-100",
                     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
                     isActive
-                      ? "text-white/90 font-semibold border-b-2 border-b-lux-red"
-                      : "text-white/40 font-normal border-b-2 border-b-transparent hover:text-white/70",
+                      ? "text-white/90 font-semibold border-b-[3px] border-b-lux-red"
+                      : "text-white/40 font-normal border-b-[3px] border-b-transparent hover:text-white/70",
                   ].join(" ")}
                 >
                   {item.short ?? item.label}
@@ -131,12 +172,20 @@ export function AppShell({
       <main
         id="main-content"
         aria-label="Page content"
-        className="flex-1"
+        className="flex-1 w-full"
         style={{ paddingBottom: drawerClearance + 24 }}
       >
         {children}
       </main>
 
+      {/* Footer — dark, 3px lux-red top border */}
+      {footer && (
+        <footer className="bg-odm-ink border-t-[3px] border-lux-red">
+          {footer}
+        </footer>
+      )}
+
+      {/* Fixed-bottom drawer (SQL Workbench, etc.) */}
       {drawer}
     </div>
   );

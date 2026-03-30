@@ -23,9 +23,9 @@ import {
   // Navigation
   TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, NavTab, Breadcrumb, GlobalSearch,
   // Feedback
-  EmptyState, ErrorBoundary, ToastProvider, useToast,
+  EmptyState, ErrorBoundary, ToastProvider, useToast, Notice,
   // Forms
-  Input, Textarea, Select, SearchBox, FilterBar,
+  Input, Textarea, Select, SearchBox, FilterBar, Combobox,
   // Data
   DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench,
   // Overlays
@@ -197,59 +197,69 @@ const SQL_RESULT_DATA: SqlResultRow[] = [
 ];
 
 function SqlWorkbenchSection(): React.ReactElement {
-  const [results, setResults] = useState<SqlResultRow[] | undefined>(undefined);
+  const [resultRows, setResultRows] = useState<SqlResultRow[] | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
-  function handleRun(_sql: string, _name: string): void {
-    setResults(undefined);
+  function handleRun(_sql: string): void {
+    setResultRows(undefined);
     setLoading(true);
-    // Simulate async query
     setTimeout(() => {
       setLoading(false);
-      setResults(SQL_RESULT_DATA);
+      setResultRows(SQL_RESULT_DATA);
     }, 1200);
   }
+
+  const activeQuery = {
+    id: "Q-001",
+    name: "Top datasets by rows",
+    state: "saved" as const,
+    sql: "SELECT id, name, count, updated\nFROM datasets\nORDER BY count DESC\nLIMIT 20;",
+    description: "Lists all registered datasets ordered by row count.",
+  };
 
   return (
     <CatalogueSection title="SqlWorkbench">
       <CatalogueExample
-        label="Collapsed (default state)"
-        code={`<SqlWorkbench
-  defaultQueryName="Top datasets"
-  defaultSql="SELECT * FROM datasets LIMIT 20"
-  onRun={(sql, name) => fetchResults(sql)}
-/>`}
+        label="Collapsed tab strip (default)"
+        code={`<SqlWorkbench defaultState="collapsed" />`}
         bg="#EFEFED"
       >
-        <SqlWorkbench
-          defaultQueryName="Top datasets"
-          defaultSql="SELECT * FROM datasets LIMIT 20"
-          onRun={() => undefined}
-        />
+        <div style={{ position: "relative", height: 80, background: "#EFEFED" }}>
+          <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#909090", margin: "0 0 8px 0" }}>
+            The drawer is fixed-position in real use. Preview below shows the tab strip:
+          </p>
+          <SqlWorkbench
+            defaultState="collapsed"
+            activeQuery={activeQuery}
+          />
+        </div>
       </CatalogueExample>
 
       <CatalogueExample
-        label="Open state — editor visible"
+        label="Half state — editor open, click Run to expand to full"
         code={`<SqlWorkbench
-  defaultState="open"
-  defaultQueryName="Count by tier"
-  defaultSql="SELECT tier, COUNT(*) AS n&#10;FROM datasets&#10;GROUP BY tier"
-  onRun={(sql, name) => fetchResults(sql)}
-  resultColumns={cols}
-  resultData={rows}
-  loading={isLoading}
+  defaultState="half"
+  activeQuery={query}
+  onRun={sql => executeQuery(sql)}
+  resultRows={rows}
+  loading={isRunning}
+  linkedDatasetId="DS-001"
 />`}
         bg="#EFEFED"
       >
-        <SqlWorkbench
-          defaultState="open"
-          defaultQueryName="Count by tier"
-          defaultSql={"SELECT tier, COUNT(*) AS n\nFROM datasets\nGROUP BY tier"}
-          onRun={handleRun}
-          resultColumns={SQL_RESULT_COLUMNS as ColumnDef<Record<string, unknown>>[]}
-          resultData={results as Record<string, unknown>[] | undefined}
-          loading={loading}
-        />
+        <div style={{ position: "relative", height: 320, background: "#EFEFED" }}>
+          <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#909090", margin: "0 0 8px 0" }}>
+            In real use this is fixed to the viewport bottom. Interact below:
+          </p>
+          <SqlWorkbench
+            defaultState="half"
+            activeQuery={activeQuery}
+            onRun={handleRun}
+            resultRows={resultRows}
+            loading={loading}
+            linkedDatasetId="DS-001"
+          />
+        </div>
       </CatalogueExample>
     </CatalogueSection>
   );
@@ -258,6 +268,63 @@ function SqlWorkbenchSection(): React.ReactElement {
 /* ─────────────────────────────────────────────────────────────────────────────
    Main Catalogue component
 ───────────────────────────────────────────────────────────────────────────── */
+/* ── Combobox demo helpers ───────────────────────────────────────────────── */
+
+const SKOS_OPTIONS = [
+  { value: "cycling",  label: "Cycling",          description: "Movement by bicycle on roads or dedicated cycle lanes." },
+  { value: "ped",      label: "Pedestrian",        description: "Movement on foot in public or semi-public space." },
+  { value: "pt",       label: "Public Transport",  description: "Shared scheduled services: bus, tram, and rail." },
+  { value: "car",      label: "Private Car",       description: "Motorised individual vehicle travel." },
+  { value: "escooter", label: "E-Scooter",         description: "Electric micro-mobility rental or personal device." },
+];
+
+const DATASET_OPTIONS = [
+  { value: "DS-001", label: "MobiScout Count Data",     description: "DS-001 · Canton ZH" },
+  { value: "DS-002", label: "NPVM Demand Matrix",        description: "DS-002 · ARE" },
+  { value: "DS-003", label: "SBB Passenger Flows",       description: "DS-003 · SBB" },
+  { value: "DS-004", label: "Accident Register ASTRA",   description: "DS-004 · ASTRA" },
+  { value: "DS-005", label: "MIV Traffic Counts A1–4", description: "DS-005 · ASTRA" },
+];
+
+function ComboboxSingleDemo(): React.ReactElement {
+  const [mode, setMode] = useState<string | null>(null);
+  return (
+    <div style={{ maxWidth: 380 }}>
+      <Combobox
+        options={SKOS_OPTIONS}
+        value={mode}
+        onChange={(v) => setMode(v as string | null)}
+        placeholder="Select transport mode…"
+      />
+      {mode && (
+        <p style={{ marginTop: 8, fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#606060" }}>
+          Selected: <strong>{mode}</strong>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ComboboxMultiDemo(): React.ReactElement {
+  const [selected, setSelected] = useState<string[]>([]);
+  return (
+    <div style={{ maxWidth: 480 }}>
+      <Combobox
+        options={DATASET_OPTIONS}
+        multiSelect
+        value={selected}
+        onChange={(v) => setSelected(v as string[])}
+        placeholder="Search datasets…"
+      />
+      {selected.length > 0 && (
+        <p style={{ marginTop: 8, fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#606060" }}>
+          Selected: {selected.join(", ")}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function Catalogue(): React.ReactElement {
   const [modalOpen, setModalOpen]     = useState(false);
   const [drawerOpen, setDrawerOpen]   = useState(false);
@@ -948,6 +1015,61 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
               <p style={{ margin: 0, fontFamily: "Montserrat, sans-serif", fontSize: 13 }}>Below md / Above lg</p>
               <Divider spacing="lg" />
               <p style={{ margin: 0, fontFamily: "Montserrat, sans-serif", fontSize: 13 }}>Below lg</p>
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── Notice ───────────────────────────────────────────────────── */}
+        <CatalogueSection title="Notice">
+          <CatalogueExample label="All variants" code={`<Notice variant="info">Dataset ingestion completed successfully.</Notice>
+<Notice variant="warning" title="Schema not defined">No CSVW schema registered for this asset.</Notice>
+<Notice variant="danger" title="3 sources require attention">SBB Passenger Flows, Cycling Routes — over 30 days stale.</Notice>
+<Notice variant="ok" title="Registration confirmed">The asset has been added to the catalogue.</Notice>`}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0, maxWidth: 540 }}>
+              <Notice variant="info">Dataset ingestion completed successfully.</Notice>
+              <Notice variant="warning" title="Schema not defined">No CSVW schema has been registered for this asset.</Notice>
+              <Notice variant="danger" title="3 sources require attention">SBB Passenger Flows, Cycling Routes — last received more than 30 days ago.</Notice>
+              <Notice variant="ok" title="Registration confirmed">The asset has been added to the catalogue.</Notice>
+            </div>
+          </CatalogueExample>
+          <CatalogueExample label="Without title" code={`<Notice variant="warning">Approaching 30 days since last receipt.</Notice>`} bg="#EFEFED">
+            <Notice variant="warning">Approaching 30 days since last receipt.</Notice>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── Combobox ─────────────────────────────────────────────────── */}
+        <CatalogueSection title="Combobox">
+          <CatalogueExample label="SKOS concept selector (label + definition)" code={`<Combobox
+  options={[
+    { value: "cycling", label: "Cycling", description: "Movement by bicycle on roads or dedicated lanes." },
+    { value: "ped",     label: "Pedestrian", description: "Movement on foot in public or semi-public space." },
+    { value: "pt",      label: "Public Transport", description: "Shared scheduled services: bus, tram, rail." },
+  ]}
+  placeholder="Select transport mode…"
+  value={mode}
+  onChange={v => setMode(v as string)}
+/>`}>
+            <ComboboxSingleDemo />
+          </CatalogueExample>
+          <CatalogueExample label="Multi-select dataset search (name + ID · source)" code={`<Combobox
+  multiSelect
+  options={datasets.map(d => ({ value: d.id, label: d.name, description: \`\${d.id} · \${d.source}\` }))}
+  value={selected}
+  onChange={v => setSelected(v as string[])}
+  placeholder="Search datasets…"
+/>`}>
+            <ComboboxMultiDemo />
+          </CatalogueExample>
+          <CatalogueExample label="Error state" code={`<Combobox options={options} error placeholder="Required field…" />`}>
+            <div style={{ maxWidth: 320 }}>
+              <Combobox
+                options={[
+                  { value: "a", label: "Option A", description: "First option" },
+                  { value: "b", label: "Option B", description: "Second option" },
+                ]}
+                error
+                placeholder="Required — select an option"
+              />
             </div>
           </CatalogueExample>
         </CatalogueSection>

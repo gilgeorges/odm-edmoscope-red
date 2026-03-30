@@ -79,6 +79,9 @@ export type { ErrorBoundaryProps } from "./feedback/ErrorBoundary.tsx";
 export { ToastProvider, useToast } from "./feedback/Toast.tsx";
 export type { ToastProviderProps } from "./feedback/Toast.tsx";
 
+export { Notice }                 from "./feedback/Notice.tsx";
+export type { NoticeProps }       from "./feedback/Notice.tsx";
+
 // ── Forms ────────────────────────────────────────────────────────────────────
 export { Input, Textarea }        from "./forms/Input.tsx";
 export type { InputProps, TextareaProps } from "./forms/Input.tsx";
@@ -91,6 +94,9 @@ export type { SearchBoxProps }    from "./forms/SearchBox.tsx";
 
 export { FilterBar }              from "./forms/FilterBar.tsx";
 export type { FilterBarProps, FilterDefinition, FilterState } from "./forms/FilterBar.tsx";
+
+export { Combobox }               from "./forms/Combobox.tsx";
+export type { ComboboxProps, ComboboxOption } from "./forms/Combobox.tsx";
 
 // ── Data display ──────────────────────────────────────────────────────────────
 export { DataTable }              from "./data/DataTable.tsx";
@@ -106,7 +112,7 @@ export { TierBadge }              from "./data/TierBadge.tsx";
 export type { TierBadgeProps }    from "./data/TierBadge.tsx";
 
 export { SqlWorkbench }           from "./data/SqlWorkbench.tsx";
-export type { SqlWorkbenchProps } from "./data/SqlWorkbench.tsx";
+export type { SqlWorkbenchProps, SavedQuery, ResultRow, DrawerState } from "./data/SqlWorkbench.tsx";
 
 // ── Overlays ──────────────────────────────────────────────────────────────────
 export { Modal }                  from "./overlays/Modal.tsx";

@@ -1,357 +1,500 @@
-import React, { useState, useRef, useId } from "react";
-import { Button } from "../primitives/Button.tsx";
-import { Spinner } from "../primitives/Spinner.tsx";
-import { DataTable } from "./DataTable.tsx";
-import type { ColumnDef } from "./DataTable.tsx";
+import React, { useState, useEffect, useRef } from "react";
 
-/** Visual state of the workbench panel. */
-type WorkbenchState = "collapsed" | "open" | "fullscreen";
+/** Visual state of the SQL drawer. */
+export type DrawerState = "collapsed" | "half" | "full";
 
 /**
- * SqlWorkbenchProps — props for the SqlWorkbench panel.
+ * SavedQuery — a query record shown in the tab strip and save form.
+ */
+export interface SavedQuery {
+  /** Unique identifier (e.g. "Q-001"). */
+  id: string;
+  /** Human-readable query name. */
+  name: string;
+  /**
+   * Query state controlling the badge colour.
+   * - `draft`       — unsaved, amber
+   * - `saved`       — saved, green
+   * - `implemented` — linked to a pipeline, blue
+   * - `archived`    — hidden by default, grey
+   */
+  state: "draft" | "saved" | "implemented" | "archived";
+  /** Initial SQL text. */
+  sql: string;
+  /** Optional description. */
+  description?: string;
+}
+
+/**
+ * ResultRow — a single row returned from a query execution.
+ * Keys correspond to column names; values are strings or numbers.
+ */
+export type ResultRow = Record<string, string | number>;
+
+/**
+ * SqlWorkbenchProps — props for the SqlWorkbench bottom drawer.
  */
 export interface SqlWorkbenchProps {
   /**
-   * Initial query name shown in the header.
-   * @default "Untitled query"
+   * Initial drawer state.
+   * @default "collapsed"
    */
-  defaultQueryName?: string;
+  defaultState?: DrawerState;
   /**
-   * Initial SQL text pre-filled in the editor.
-   * @default ""
+   * The active query loaded into the editor, or null for an unsaved scratch
+   * buffer. When this changes from outside the drawer syncs its SQL editor.
    */
-  defaultSql?: string;
+  activeQuery?: SavedQuery | null;
   /**
-   * Called when the Run button is clicked. Receives the current SQL string
-   * and query name. The panel transitions to fullscreen immediately.
+   * Called when the user clicks Run. Receives the current SQL string.
+   * The drawer transitions to full automatically.
    */
-  onRun?: (sql: string, queryName: string) => void;
+  onRun?: (sql: string) => void;
   /**
-   * Column definitions for the results table.
-   * When undefined no results area is rendered.
+   * Called when the user saves a query (new or fork).
+   * Receives the updated query object.
    */
-  resultColumns?: ColumnDef<Record<string, unknown>>[];
+  onSave?: (query: SavedQuery) => void;
   /**
-   * Row data for the results table.
+   * Called when the user clicks "+ New" to start a fresh scratch buffer.
    */
-  resultData?: Record<string, unknown>[];
+  onNew?: () => void;
   /**
-   * When true a loading spinner is shown in the results area instead of the
-   * table (useful while the caller awaits the query response).
+   * Called when the user clicks the "View [dataset]" link in the tab strip.
+   * Receives the dataset identifier string passed via `linkedDatasetId`.
+   */
+  onNavigateDataset?: (datasetId: string) => void;
+  /**
+   * Dataset identifier linked to the current active query (e.g. "DS-001").
+   * When provided, a "View [id] →" link appears in the collapsed tab strip.
+   */
+  linkedDatasetId?: string;
+  /**
+   * Query result rows to show in the full-state results table.
+   * When undefined, the results area is hidden.
+   */
+  resultRows?: ResultRow[];
+  /**
+   * When true a loading message is shown instead of results.
    * @default false
    */
   loading?: boolean;
   /**
-   * Error message displayed below the SQL editor when a run fails.
-   * Cleared automatically when the user edits the SQL.
+   * Error message shown in the results area instead of the table.
    */
   error?: string;
   /**
-   * Initial panel state.
-   * @default "collapsed"
+   * Additional CSS classes on the outermost fixed container.
    */
-  defaultState?: WorkbenchState;
-  /** Additional CSS classes on the outermost element. */
   className?: string;
 }
 
-const PANEL_BASE =
-  "bg-odm-card border border-odm-line font-sans flex flex-col";
+/* ── State badge colours ────────────────────────────────────────────────── */
+const STATE_BADGE: Record<
+  SavedQuery["state"],
+  { bg: string; border: string; text: string; label: string }
+> = {
+  draft:       { bg: "bg-odm-warn-bg",  border: "border-odm-warn-bd", text: "text-odm-warn",  label: "Draft" },
+  saved:       { bg: "bg-odm-ok-bg",    border: "border-odm-ok-bd",   text: "text-odm-ok",    label: "Saved" },
+  implemented: { bg: "bg-odm-info-bg",  border: "border-odm-info-bd", text: "text-odm-info",  label: "Implemented" },
+  archived:    { bg: "bg-odm-surface",  border: "border-odm-line-l",  text: "text-odm-muted", label: "Archived" },
+};
 
-const HEADER_CLASSES =
-  "flex items-center gap-2 px-3 py-2 border-b border-odm-line shrink-0";
-
-const NAME_INPUT_CLASSES = [
-  "flex-1 min-w-0 bg-transparent outline-none",
-  "font-sans text-[13px] font-semibold text-odm-ink",
-  "placeholder:text-odm-faint",
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-1 rounded-sm",
-].join(" ");
-
-const SQL_TEXTAREA_CLASSES = [
-  "w-full font-mono text-[12px] text-odm-ink leading-relaxed",
-  "bg-odm-surface border border-odm-line border-b-2 border-b-odm-line-h",
-  "px-3 py-2 outline-none resize-none",
-  "placeholder:text-odm-faint",
-  "focus:border-b-lux-red",
-  "transition-colors duration-100",
-].join(" ");
-
-/** Icon-only control button used in the workbench header. */
-function ControlBtn({
-  label,
-  symbol,
+/** Small toolbar button used inside the drawer. */
+function DrawerBtn({
+  children,
   onClick,
+  primary = false,
+  disabled = false,
 }: {
-  label: string;
-  symbol: string;
+  children: React.ReactNode;
   onClick: () => void;
+  primary?: boolean;
+  disabled?: boolean;
 }): React.ReactElement {
   return (
     <button
       type="button"
-      aria-label={label}
-      title={label}
       onClick={onClick}
+      disabled={disabled}
       className={[
-        "inline-flex items-center justify-center w-6 h-6 shrink-0",
-        "text-odm-muted hover:text-odm-mid hover:bg-odm-surface rounded",
-        "transition-colors duration-100 cursor-pointer",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-1",
+        "font-sans text-[11px] font-semibold px-2.5 py-0.5 cursor-pointer",
+        "whitespace-nowrap border border-b border-b-odm-line-h",
+        "transition-colors duration-100",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+        primary
+          ? "bg-odm-ink border-odm-ink text-white"
+          : "bg-white border-odm-line text-odm-mid hover:text-odm-ink",
       ].join(" ")}
     >
-      <span aria-hidden="true" className="text-[14px] leading-none select-none">
-        {symbol}
-      </span>
+      {children}
     </button>
   );
 }
 
+/** Inline state badge shown in the tab strip. */
+function StateBadge({ state }: { state: SavedQuery["state"] }): React.ReactElement {
+  const s = STATE_BADGE[state];
+  return (
+    <span
+      className={[
+        "inline-block font-sans text-[10px] font-bold tracking-[0.04em] uppercase",
+        "px-1.5 py-px border",
+        s.bg, s.border, s.text,
+      ].join(" ")}
+    >
+      {s.label}
+    </span>
+  );
+}
+
 /**
- * SqlWorkbench — collapsible SQL editor panel with results table.
+ * SqlWorkbench — persistent fixed-bottom SQL drawer.
  *
- * Supports three visual states:
- * - **collapsed** — single-line bar; "Open" expands the editor, "Expand"
- *   jumps straight to fullscreen.
- * - **open** — floating card showing the query-name field, a monospace SQL
- *   textarea, and a Run button. Controls let the user collapse or go
- *   fullscreen.
- * - **fullscreen** — fixed overlay that fills the viewport, with the same
- *   editor layout plus the results table below.
+ * Matches the design of `observatory-catalog.jsx` — a warm off-white editor
+ * docked to the bottom of the viewport. Has three height states:
  *
- * When Run is clicked the panel transitions to fullscreen and the `onRun`
- * callback fires with the current SQL and query name. Pass `resultColumns`,
- * `resultData`, and `loading` back in to populate the results area.
+ * - **collapsed** (36px) — only the tab strip is visible.
+ * - **half** (~35vh) — SQL editor visible, results hidden.
+ * - **full** (viewport minus header) — editor + results table split view.
+ *
+ * The tab strip shows the active query name, its state badge, a "View
+ * dataset →" link, and toolbar controls (+ New, Save, ▶ Run, expand/collapse).
+ *
+ * A save form slides in above the editor when "Save" is clicked, allowing
+ * the user to name and describe the query inline.
+ *
+ * The results table appears in full mode after Run is clicked. Column headers
+ * are derived automatically from the first row's keys.
  *
  * @example
  * <SqlWorkbench
- *   defaultQueryName="Top datasets"
- *   defaultSql="SELECT * FROM datasets LIMIT 20"
- *   onRun={(sql, name) => fetchResults(sql)}
- *   resultColumns={cols}
- *   resultData={rows}
- *   loading={isLoading}
+ *   activeQuery={currentQuery}
+ *   onRun={sql => executeSql(sql)}
+ *   onSave={q => saveQuery(q)}
+ *   onNew={() => setCurrentQuery(null)}
+ *   resultRows={results}
+ *   loading={isRunning}
+ *   linkedDatasetId={currentQuery?.datasets?.[0]}
+ *   onNavigateDataset={id => navigate(`/datasets/${id}`)}
  * />
  */
 export function SqlWorkbench({
-  defaultQueryName = "Untitled query",
-  defaultSql = "",
+  defaultState = "collapsed",
+  activeQuery = null,
   onRun,
-  resultColumns,
-  resultData,
+  onSave,
+  onNew,
+  onNavigateDataset,
+  linkedDatasetId,
+  resultRows,
   loading = false,
   error,
-  defaultState = "collapsed",
   className = "",
 }: SqlWorkbenchProps): React.ReactElement {
-  const [state, setState] = useState<WorkbenchState>(defaultState);
-  const [queryName, setQueryName] = useState(defaultQueryName);
-  const [sql, setSql] = useState(defaultSql);
-  const nameInputId = useId();
-  const sqlRef = useRef<HTMLTextAreaElement>(null);
+  const [drawerState, setDrawerState] = useState<DrawerState>(defaultState);
+  const [sql, setSql] = useState(activeQuery?.sql ?? "-- Start writing SQL\n");
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveDesc, setSaveDesc] = useState("");
+  const [hasResults, setHasResults] = useState(false);
+
+  /* Sync editor when active query changes from outside */
+  useEffect(() => {
+    if (activeQuery) {
+      setSql(activeQuery.sql);
+      setHasResults(false);
+      if (drawerState === "collapsed") setDrawerState("half");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuery?.id]);
+
+  /* ── Heights ────────────────────────────────────────────────────────── */
+  const windowH =
+    typeof window !== "undefined" ? window.innerHeight : 600;
+  const heights: Record<DrawerState, number> = {
+    collapsed: 36,
+    half:      Math.min(300, Math.floor(windowH * 0.35)),
+    full:      windowH - 116,
+  };
+  const h = heights[drawerState];
+
+  /* ── Split heights in full mode ─────────────────────────────────────── */
+  const editorH  = drawerState === "full" ? Math.floor(h * 0.42) : h - 36;
+  const resultsH = drawerState === "full" ? h - editorH - 36 - 1 : 0;
+
+  /* ── Actions ────────────────────────────────────────────────────────── */
+  const isDirty = activeQuery ? sql !== activeQuery.sql : sql.trim().length > 3;
+
+  const queryName = activeQuery
+    ? activeQuery.name + (isDirty ? " *" : "")
+    : sql.trim().length > 3
+    ? "Unsaved query"
+    : "SQL Workbench";
 
   function handleRun(): void {
-    setState("fullscreen");
-    onRun?.(sql, queryName);
+    setHasResults(true);
+    setDrawerState("full");
+    onRun?.(sql);
   }
 
-  const hasResults = resultData !== undefined || loading || error !== undefined;
-
-  /* ── Collapsed ─────────────────────────────────────────────────────────── */
-  if (state === "collapsed") {
-    return (
-      <div
-        className={[
-          "flex items-center gap-2 h-10 px-3",
-          "bg-odm-card border border-odm-line",
-          "font-sans",
-          className,
-        ].join(" ")}
-      >
-        {/* SQL chip */}
-        <span
-          aria-hidden="true"
-          className="inline-flex items-center justify-center w-5 h-5 shrink-0 rounded bg-odm-surface border border-odm-line text-[10px] font-bold font-mono text-odm-muted select-none"
-        >
-          SQL
-        </span>
-
-        {/* Query name */}
-        <span className="flex-1 min-w-0 truncate text-[13px] font-semibold text-odm-ink">
-          {queryName}
-        </span>
-
-        {/* Actions */}
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setState("open")}
-          aria-label="Open SQL workbench"
-        >
-          Open
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setState("fullscreen")}
-          aria-label="Expand SQL workbench to fullscreen"
-        >
-          <span aria-hidden="true" className="text-[14px] leading-none">
-            ⤢
-          </span>
-          Expand
-        </Button>
-      </div>
-    );
+  function handleSave(): void {
+    const now = new Date().toISOString().slice(0, 10);
+    const saved: SavedQuery = activeQuery
+      ? {
+          ...activeQuery,
+          name: saveName || activeQuery.name,
+          description: saveDesc || activeQuery.description,
+          sql,
+          state: "saved",
+        }
+      : {
+          id: `Q-${Date.now()}`,
+          name: saveName || "Untitled query",
+          description: saveDesc,
+          sql,
+          state: "saved",
+          // updated is not a required field but consumers may extend the type
+          ...({} as Record<string, string>),
+          updated: now,
+        };
+    onSave?.(saved);
+    setShowSaveForm(false);
+    setSaveName("");
+    setSaveDesc("");
   }
 
-  /* ── Shared editor content (used in both open and fullscreen) ──────────── */
-  const editorContent = (
-    <>
-      {/* Header row */}
-      <div className={HEADER_CLASSES}>
-        {/* SQL chip */}
-        <span
-          aria-hidden="true"
-          className="inline-flex items-center justify-center w-5 h-5 shrink-0 rounded bg-odm-surface border border-odm-line text-[10px] font-bold font-mono text-odm-muted select-none"
-        >
-          SQL
-        </span>
-
-        {/* Query name input */}
-        <label htmlFor={nameInputId} className="sr-only">
-          Query name
-        </label>
-        <input
-          id={nameInputId}
-          type="text"
-          value={queryName}
-          onChange={(e) => setQueryName(e.target.value)}
-          placeholder="Query name…"
-          className={NAME_INPUT_CLASSES}
-          aria-label="Query name"
-        />
-
-        {/* Controls */}
-        {state === "open" && (
-          <ControlBtn
-            symbol="⤢"
-            label="Expand to fullscreen"
-            onClick={() => setState("fullscreen")}
-          />
-        )}
-        {state === "fullscreen" && (
-          <ControlBtn
-            symbol="⤡"
-            label="Exit fullscreen"
-            onClick={() => setState("open")}
-          />
-        )}
-        <ControlBtn
-          symbol="−"
-          label="Collapse workbench"
-          onClick={() => setState("collapsed")}
-        />
-      </div>
-
-      {/* SQL editor */}
-      <div className="flex flex-col gap-2 p-3 shrink-0">
-        <textarea
-          ref={sqlRef}
-          value={sql}
-          onChange={(e) => setSql(e.target.value)}
-          placeholder="SELECT * FROM datasets LIMIT 20"
-          rows={state === "fullscreen" ? 8 : 5}
-          spellCheck={false}
-          aria-label="SQL query"
-          className={SQL_TEXTAREA_CLASSES}
-        />
-        <div className="flex items-center justify-between gap-2">
-          {error && (
-            <p role="alert" className="text-[12px] text-odm-bad flex-1 truncate">
-              {error}
-            </p>
-          )}
-          <div className="ml-auto flex items-center gap-2">
-            {loading && <Spinner size="sm" label="Running query…" />}
-            <Button
-              variant="brand"
-              size="sm"
-              onClick={handleRun}
-              disabled={loading}
-              aria-label="Run SQL query"
-            >
-              {/* Play triangle */}
-              <span aria-hidden="true" className="text-[11px] leading-none">
-                ▶
-              </span>
-              Run
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Results area */}
-      {hasResults && (
-        <div className="flex-1 min-h-0 flex flex-col border-t border-odm-line">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-odm-surface border-b border-odm-line shrink-0">
-            <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-odm-muted">
-              Results
-            </span>
-            {resultData && !loading && (
-              <span className="text-[11px] text-odm-faint">
-                {resultData.length} row{resultData.length !== 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-          <div className={[
-            "p-3",
-            state === "fullscreen" ? "overflow-y-auto flex-1" : "",
-          ].join(" ")}>
-            {loading && (
-              <div className="flex items-center justify-center py-8">
-                <Spinner size="lg" label="Running query…" variant="brand" />
-              </div>
-            )}
-            {!loading && resultData && resultColumns && (
-              <DataTable
-                columns={resultColumns}
-                data={resultData}
-              />
-            )}
-            {!loading && !resultData && !error && (
-              <p className="text-[13px] text-odm-faint py-4 text-center">
-                No results yet — click Run to execute the query.
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  /* ── Open ──────────────────────────────────────────────────────────────── */
-  if (state === "open") {
-    return (
-      <div
-        className={[PANEL_BASE, className].join(" ")}
-        role="region"
-        aria-label={`SQL Workbench: ${queryName}`}
-      >
-        {editorContent}
-      </div>
-    );
+  function handleToggle(): void {
+    setDrawerState((s) => (s === "collapsed" ? "half" : "collapsed"));
   }
 
-  /* ── Fullscreen ────────────────────────────────────────────────────────── */
+  /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-odm-card"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`SQL Workbench: ${queryName}`}
+      role="region"
+      aria-label="SQL Workbench"
+      className={[
+        "fixed bottom-0 left-0 right-0 z-[200]",
+        "flex flex-col bg-white",
+        "border-t-[3px] border-lux-red",
+        "shadow-[0_-2px_16px_rgba(0,0,0,0.10)]",
+        "transition-[height] duration-200 ease-in-out",
+        className,
+      ].join(" ")}
+      style={{ height: h }}
     >
-      {editorContent}
+      {/* ── Tab / toolbar strip ─────────────────────────────────────────── */}
+      <div
+        className={[
+          "h-9 shrink-0 flex items-center justify-between px-4",
+          "bg-odm-surface cursor-pointer select-none",
+          drawerState !== "collapsed" ? "border-b border-odm-line" : "",
+        ].join(" ")}
+        onClick={handleToggle}
+        role="button"
+        aria-expanded={drawerState !== "collapsed"}
+        aria-label={drawerState === "collapsed" ? "Open SQL Workbench" : "Collapse SQL Workbench"}
+      >
+        {/* Left: label + name + state badge + dataset link */}
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          <span className="font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-lux-red shrink-0">
+            SQL
+          </span>
+          <span className="font-mono text-[12px] text-odm-mid truncate">
+            {queryName}
+          </span>
+          {activeQuery && <StateBadge state={activeQuery.state} />}
+          {linkedDatasetId && drawerState !== "collapsed" && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigateDataset?.(linkedDatasetId);
+              }}
+              className="font-sans text-[11px] text-odm-muted underline cursor-pointer bg-transparent border-0 p-0 shrink-0 hover:text-odm-mid"
+            >
+              View {linkedDatasetId} →
+            </button>
+          )}
+        </div>
+
+        {/* Right: controls */}
+        <div
+          className="flex items-center gap-1.5 shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {drawerState !== "collapsed" && (
+            <>
+              <DrawerBtn onClick={() => { onNew?.(); setSql("-- New query\n"); setHasResults(false); setDrawerState("half"); }}>
+                + New
+              </DrawerBtn>
+              <DrawerBtn onClick={() => setShowSaveForm((s) => !s)}>
+                {activeQuery?.state === "saved" || activeQuery?.state === "implemented"
+                  ? "Fork & save"
+                  : "Save"}
+              </DrawerBtn>
+              <DrawerBtn primary onClick={handleRun}>
+                ▶ Run
+              </DrawerBtn>
+              <DrawerBtn
+                onClick={() =>
+                  setDrawerState((s) => (s === "full" ? "half" : "full"))
+                }
+              >
+                {drawerState === "full" ? "↓" : "↑"}
+              </DrawerBtn>
+            </>
+          )}
+          <DrawerBtn onClick={handleToggle}>
+            {drawerState === "collapsed" ? "▲" : "▼"}
+          </DrawerBtn>
+        </div>
+      </div>
+
+      {/* ── Expanded content ────────────────────────────────────────────── */}
+      {drawerState !== "collapsed" && (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Save form */}
+          {showSaveForm && (
+            <div className="bg-odm-card border-b border-odm-line px-4 py-2.5 flex gap-2 items-center flex-wrap shrink-0">
+              <input
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Query name…"
+                className={[
+                  "font-sans text-[13px] text-odm-ink bg-white",
+                  "border border-odm-line border-b-2 border-b-odm-line-h",
+                  "px-2.5 py-1 outline-none flex-[1_1_180px]",
+                  "focus:border-b-lux-red transition-colors duration-100",
+                ].join(" ")}
+              />
+              <input
+                type="text"
+                value={saveDesc}
+                onChange={(e) => setSaveDesc(e.target.value)}
+                placeholder="Description (optional)…"
+                className={[
+                  "font-sans text-[13px] text-odm-ink bg-white",
+                  "border border-odm-line border-b-2 border-b-odm-line-h",
+                  "px-2.5 py-1 outline-none flex-[2_1_240px]",
+                  "focus:border-b-lux-red transition-colors duration-100",
+                ].join(" ")}
+              />
+              <DrawerBtn primary onClick={handleSave}>Save</DrawerBtn>
+              <DrawerBtn onClick={() => setShowSaveForm(false)}>Cancel</DrawerBtn>
+            </div>
+          )}
+
+          {/* SQL editor */}
+          <textarea
+            value={sql}
+            onChange={(e) => setSql(e.target.value)}
+            spellCheck={false}
+            aria-label="SQL query editor"
+            placeholder="-- Start writing SQL"
+            className={[
+              "block w-full font-mono text-[13px] text-odm-ink leading-[1.9]",
+              "bg-odm-page border-0 border-b border-odm-line",
+              "px-4 py-3.5 outline-none resize-none box-border shrink-0",
+              "focus:outline-none",
+            ].join(" ")}
+            style={{ height: editorH }}
+          />
+
+          {/* Results — full mode only */}
+          {drawerState === "full" && (
+            <div
+              className="flex-1 overflow-y-auto overflow-x-auto bg-white"
+              style={{ height: resultsH }}
+            >
+              {/* Results header */}
+              <div className="sticky top-0 bg-white z-[1] px-4 py-2.5 border-b border-odm-line flex justify-between items-center">
+                <span className="font-sans text-[11px] font-bold tracking-[0.08em] uppercase text-odm-muted">
+                  Query results
+                </span>
+                {resultRows && !loading && !error && (
+                  <span className="font-sans text-[11px] font-semibold text-odm-ok">
+                    {resultRows.length} row{resultRows.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+
+              {/* Loading */}
+              {loading && (
+                <div className="flex items-center justify-center py-10">
+                  <span className="font-sans text-[13px] text-odm-muted">Running query…</span>
+                </div>
+              )}
+
+              {/* Error */}
+              {!loading && error && (
+                <div className="px-4 py-4 border-l-[3px] border-odm-bad-bd ml-4 mt-4">
+                  <p className="font-sans text-[13px] text-odm-bad">{error}</p>
+                </div>
+              )}
+
+              {/* No results yet */}
+              {!loading && !error && !hasResults && (
+                <div className="flex items-center justify-center flex-1 py-10">
+                  <span className="font-sans text-[13px] text-odm-faint">
+                    Press Run to execute the query
+                  </span>
+                </div>
+              )}
+
+              {/* Results table */}
+              {!loading && !error && hasResults && resultRows && resultRows.length > 0 && (
+                <div className="px-4 pb-6">
+                  <table className="w-full border-collapse font-sans text-[13px]">
+                    <thead>
+                      <tr className="border-b-2 border-odm-line">
+                        {Object.keys(resultRows[0]).map((col) => (
+                          <th
+                            key={col}
+                            className="py-2 pr-3.5 text-left font-sans text-[11px] font-bold tracking-[0.1em] uppercase text-odm-muted"
+                          >
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resultRows.map((row, i) => (
+                        <tr key={i} className="border-b border-odm-line-l">
+                          {Object.values(row).map((v, j) => (
+                            <td
+                              key={j}
+                              className={[
+                                "py-2 pr-3.5 text-odm-ink",
+                                typeof v === "number"
+                                  ? "font-mono font-semibold"
+                                  : "font-sans",
+                              ].join(" ")}
+                            >
+                              {typeof v === "number" ? v.toLocaleString() : v}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* No rows returned */}
+              {!loading && !error && hasResults && resultRows && resultRows.length === 0 && (
+                <div className="flex items-center justify-center py-10">
+                  <span className="font-sans text-[13px] text-odm-faint">
+                    Query returned 0 rows.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
