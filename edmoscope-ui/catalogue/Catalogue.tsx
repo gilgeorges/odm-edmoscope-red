@@ -21,7 +21,7 @@ import {
   // Layout
   AppShell, PageHeader, Section, Divider, SideNavShell,
   // Navigation
-  TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, Breadcrumb,
+  TopBar, IDMLogo, UserChip, Sidebar, SidebarItem, Breadcrumb, GlobalSearch,
   // Feedback
   EmptyState, ErrorBoundary, ToastProvider, useToast,
   // Forms
@@ -107,6 +107,32 @@ function CatalogueExample({ label, code, children, bg = "white" }: {
 /* ─────────────────────────────────────────────────────────────────────────────
    Toast trigger helper (needs to be inside ToastProvider)
 ───────────────────────────────────────────────────────────────────────────── */
+function GlobalSearchDemo(): React.ReactElement {
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState("");
+  const DEMO_RESULTS = query.length >= 2 ? [
+    { label: "Datasets · 2", results: [
+      { id: "DS-001", title: "MobiScout Count Data", subtitle: "MobiScout AG · Source", icon: "▣" },
+      { id: "DS-002", title: "SEBES Traffic Counts", subtitle: "SEBES · Source",        icon: "▣" },
+    ]},
+    { label: "Actors · 1", results: [
+      { id: "AC-007", title: "Julie Schmit", subtitle: "Data steward", icon: "◎" },
+    ]},
+  ] : [];
+  return (
+    <GlobalSearch
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => { setOpen(false); setQuery(""); }}
+      query={query}
+      onQueryChange={setQuery}
+      results={DEMO_RESULTS}
+      onSelect={r => alert(`Selected: ${r.title}`)}
+      placeholder="Search datasets, actors…"
+    />
+  );
+}
+
 function ToastDemo(): React.ReactElement {
   const { toast } = useToast();
   return (
@@ -384,25 +410,38 @@ export default function Catalogue(): React.ReactElement {
         {/* ── Layout: SideNavShell ─────────────────────────────────────── */}
         <CatalogueSection title="SideNavShell">
           <CatalogueExample
-            label="Vertical nav layout — full shell preview"
+            label="Full shell — logo + search + nav + footer"
             code={`<SideNavShell
-  topBar={<TopBar logo={<IDMLogo />} actions={<UserChip name="Julie Schmit" />} />}
+  logo={<IDMLogo compact />}
+  search={
+    <GlobalSearch
+      open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)}
+      query={query} onQueryChange={setQuery} results={results} onSelect={handleSelect}
+    />
+  }
   nav={
     <Sidebar>
-      <SidebarItem label="Overview"  icon="▣" isActive onClick={…} />
-      <SidebarItem label="Datasets"  icon="▤" onClick={…} />
-      <SidebarItem label="Queries"   icon="⌕" onClick={…} />
-      <SidebarItem label="Actors"    icon="◎" onClick={…} />
+      <SidebarItem label="Overview"  icon="▣" isActive onClick={() => navigate("/")} />
+      <SidebarItem label="Datasets"  icon="▤" onClick={() => navigate("/datasets")} />
+      <SidebarItem label="Queries"   icon="⌕" onClick={() => navigate("/queries")} />
+      <SidebarItem label="Actors"    icon="◎" onClick={() => navigate("/actors")} />
     </Sidebar>
   }
+  navFooter={<UserChip name="Julie Schmit" />}
 >
-  <div style={{ padding: 32 }}>Page content here</div>
+  <Outlet />
 </SideNavShell>`}
           >
-            {/* Rendered in a fixed-height box so it doesn't take over the catalogue */}
-            <div style={{ height: 320, overflow: "hidden", border: "1px solid #D0D0CC", position: "relative" }}>
+            <div style={{ height: 360, overflow: "hidden", border: "1px solid #D0D0CC" }}>
               <SideNavShell
-                topBar={<TopBar logo={<IDMLogo compact />} actions={<UserChip name="Julie Schmit" />} />}
+                logo={<IDMLogo compact />}
+                search={
+                  <GlobalSearch
+                    open={false} onOpen={() => undefined} onClose={() => undefined}
+                    query="" onQueryChange={() => undefined} results={[]} onSelect={() => undefined}
+                    placeholder="Search…"
+                  />
+                }
                 nav={
                   <Sidebar>
                     <SidebarItem label="Overview"  icon="▣" isActive onClick={() => undefined} />
@@ -411,6 +450,7 @@ export default function Catalogue(): React.ReactElement {
                     <SidebarItem label="Actors"    icon="◎" onClick={() => undefined} />
                   </Sidebar>
                 }
+                navFooter={<UserChip name="Julie Schmit" />}
               >
                 <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif" }}>
                   <PageHeader section="Overview" title="Dashboard" sub="Summary of catalogue activity" />
@@ -419,36 +459,31 @@ export default function Catalogue(): React.ReactElement {
               </SideNavShell>
             </div>
           </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── Navigation: GlobalSearch ──────────────────────────────────── */}
+        <CatalogueSection title="GlobalSearch">
           <CatalogueExample
-            label="With navFooter slot"
-            code={`<SideNavShell
-  topBar={…}
-  nav={<Sidebar>…</Sidebar>}
-  navFooter={<span style={{ fontSize: 11, color: "#909090" }}>v0.1.0</span>}
->
-  …
-</SideNavShell>`}
+            label="Trigger button (click to open overlay)"
+            code={`const [open, setOpen]   = useState(false);
+const [query, setQuery] = useState("");
+
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); setQuery(""); }}
+  query={query}
+  onQueryChange={setQuery}
+  results={[
+    { label: "Datasets · 2", results: [
+      { id: "DS-001", title: "MobiScout Count Data", subtitle: "MobiScout AG", icon: "▣" },
+      { id: "DS-002", title: "SEBES Traffic Counts", subtitle: "SEBES",        icon: "▣" },
+    ]},
+  ]}
+  onSelect={r => console.log(r)}
+/>`}
           >
-            <div style={{ height: 280, overflow: "hidden", border: "1px solid #D0D0CC" }}>
-              <SideNavShell
-                topBar={<TopBar logo={<IDMLogo compact />} />}
-                nav={
-                  <Sidebar>
-                    <SidebarItem label="Overview" icon="▣" isActive onClick={() => undefined} />
-                    <SidebarItem label="Datasets" icon="▤" onClick={() => undefined} />
-                  </Sidebar>
-                }
-                navFooter={
-                  <span style={{ fontFamily: "Montserrat, sans-serif", fontSize: 11, color: "#909090" }}>
-                    EDMoScope v0.1.0
-                  </span>
-                }
-              >
-                <div style={{ padding: 32, fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>
-                  Page content
-                </div>
-              </SideNavShell>
-            </div>
+            <GlobalSearchDemo />
           </CatalogueExample>
         </CatalogueSection>
 

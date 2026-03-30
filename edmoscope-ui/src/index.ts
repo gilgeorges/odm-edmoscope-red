@@ -63,6 +63,9 @@ export type { SidebarProps, SidebarItemProps } from "./navigation/Sidebar.tsx";
 export { Breadcrumb }             from "./navigation/Breadcrumb.tsx";
 export type { BreadcrumbProps, BreadcrumbItem } from "./navigation/Breadcrumb.tsx";
 
+export { GlobalSearch }           from "./navigation/GlobalSearch.tsx";
+export type { GlobalSearchProps, SearchResult, SearchResultGroup } from "./navigation/GlobalSearch.tsx";
+
 // ── Feedback ──────────────────────────────────────────────────────────────────
 export { EmptyState }             from "./feedback/EmptyState.tsx";
 export type { EmptyStateProps }   from "./feedback/EmptyState.tsx";
