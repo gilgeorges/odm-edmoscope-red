@@ -36,7 +36,9 @@ Never push to `main` without explicit permission.
 | Language | TypeScript strict (`"strict": true`, no `any`) |
 | Styling | Tailwind CSS v4 — utility classes only, **no inline styles** |
 | Build | None (consumed as submodule by host app's Vite) |
-| Catalogue preview | `npx vite catalogue/` — no config needed |
+| Catalogue preview | `npm run catalogue` inside `edmoscope-ui/` |
+| Catalogue build | `npm run build:catalogue` → `catalogue/dist/` |
+| Catalogue live URL | https://gilgeorges.github.io/odm-edmoscope-red/ (GitHub Pages, auto-deployed) |
 
 ---
 
