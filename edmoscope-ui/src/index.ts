@@ -69,6 +69,9 @@ export type { BreadcrumbProps, BreadcrumbItem } from "./navigation/Breadcrumb.ts
 export { GlobalSearch }           from "./navigation/GlobalSearch.tsx";
 export type { GlobalSearchProps, SearchResult, SearchResultGroup } from "./navigation/GlobalSearch.tsx";
 
+export { Tabs }                   from "./navigation/Tabs.tsx";
+export type { TabsProps, TabListProps, TabProps, TabPanelProps } from "./navigation/Tabs.tsx";
+
 // ── Feedback ──────────────────────────────────────────────────────────────────
 export { EmptyState }             from "./feedback/EmptyState.tsx";
 export type { EmptyStateProps }   from "./feedback/EmptyState.tsx";
@@ -97,6 +100,9 @@ export type { FilterBarProps, FilterDefinition, FilterState } from "./forms/Filt
 
 export { Combobox }               from "./forms/Combobox.tsx";
 export type { ComboboxProps, ComboboxOption } from "./forms/Combobox.tsx";
+
+export { CardSelect }             from "./forms/CardSelect.tsx";
+export type { CardSelectProps, CardSelectMultiProps, CardSelectOption } from "./forms/CardSelect.tsx";
 
 // ── Data display ──────────────────────────────────────────────────────────────
 export { DataTable }              from "./data/DataTable.tsx";

@@ -210,18 +210,17 @@ export function SqlWorkbench({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeQuery?.id]);
 
-  /* ── Heights ────────────────────────────────────────────────────────── */
+  /* ── Heights (collapsed / half only — full uses inset-0) ───────────── */
   const windowH =
     typeof window !== "undefined" ? window.innerHeight : 600;
-  const heights: Record<DrawerState, number> = {
+  const partialH: Record<"collapsed" | "half", number> = {
     collapsed: 36,
     half:      Math.min(300, Math.floor(windowH * 0.35)),
-    full:      windowH - 116,
   };
-  const h = heights[drawerState];
+  const h = drawerState === "full" ? windowH : partialH[drawerState as "collapsed" | "half"] ?? 36;
 
   /* ── Split heights in full mode ─────────────────────────────────────── */
-  const editorH  = drawerState === "full" ? Math.floor(h * 0.42) : h - 36;
+  const editorH  = drawerState === "full" ? Math.floor(windowH * 0.4) : h - 36;
   const resultsH = drawerState === "full" ? h - editorH - 36 - 1 : 0;
 
   /* ── Actions ────────────────────────────────────────────────────────── */
@@ -275,14 +274,16 @@ export function SqlWorkbench({
       role="region"
       aria-label="SQL Workbench"
       className={[
-        "fixed bottom-0 left-0 right-0 z-[200]",
+        "fixed left-0 right-0 z-[300]",
         "flex flex-col bg-white",
         "border-t-[3px] border-lux-red",
         "shadow-[0_-2px_16px_rgba(0,0,0,0.10)]",
-        "transition-[height] duration-200 ease-in-out",
+        drawerState === "full"
+          ? "top-0 bottom-0"
+          : "bottom-0 transition-[height] duration-200 ease-in-out",
         className,
       ].join(" ")}
-      style={{ height: h }}
+      style={drawerState === "full" ? undefined : { height: h }}
     >
       {/* ── Tab / toolbar strip ─────────────────────────────────────────── */}
       <div

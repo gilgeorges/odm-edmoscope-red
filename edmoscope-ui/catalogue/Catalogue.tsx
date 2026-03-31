@@ -25,7 +25,9 @@ import {
   // Feedback
   EmptyState, ErrorBoundary, ToastProvider, useToast, Notice,
   // Forms
-  Input, Textarea, Select, SearchBox, FilterBar, Combobox,
+  Input, Textarea, Select, SearchBox, FilterBar, Combobox, CardSelect,
+  // Navigation (Tabs)
+  Tabs,
   // Data
   DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench,
   // Overlays
@@ -322,6 +324,186 @@ function ComboboxMultiDemo(): React.ReactElement {
         </p>
       )}
     </div>
+  );
+}
+
+/* ─── Tabs demo ──────────────────────────────────────────────────────────── */
+
+function TabsSection(): React.ReactElement {
+  return (
+    <CatalogueSection title="Tabs">
+      <CatalogueExample
+        label="Default (page scroll)"
+        code={`<Tabs defaultTab="overview">
+  <Tabs.List>
+    <Tabs.Tab id="overview">Overview</Tabs.Tab>
+    <Tabs.Tab id="schema">Schema</Tabs.Tab>
+    <Tabs.Tab id="lineage">Lineage</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel id="overview" className="pt-4">…overview content…</Tabs.Panel>
+  <Tabs.Panel id="schema"   className="pt-4">…schema content…</Tabs.Panel>
+  <Tabs.Panel id="lineage"  className="pt-4">…lineage content…</Tabs.Panel>
+</Tabs>`}
+      >
+        <div style={{ maxWidth: 560 }}>
+          <Tabs defaultTab="overview">
+            <Tabs.List>
+              <Tabs.Tab id="overview">Overview</Tabs.Tab>
+              <Tabs.Tab id="schema">Schema</Tabs.Tab>
+              <Tabs.Tab id="lineage">Lineage</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel id="overview" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#1A1A1A" }}>
+                Overview panel content
+              </p>
+            </Tabs.Panel>
+            <Tabs.Panel id="schema" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#1A1A1A" }}>
+                Schema panel content
+              </p>
+            </Tabs.Panel>
+            <Tabs.Panel id="lineage" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#1A1A1A" }}>
+                Lineage panel content
+              </p>
+            </Tabs.Panel>
+          </Tabs>
+        </div>
+      </CatalogueExample>
+
+      <CatalogueExample
+        label="fill — internal scroll, page stays fixed"
+        code={`<Tabs defaultTab="data" fill>
+  <Tabs.List>
+    <Tabs.Tab id="data">Data</Tabs.Tab>
+    <Tabs.Tab id="docs">Docs</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel id="data" className="pt-4">…scrolls inside…</Tabs.Panel>
+  <Tabs.Panel id="docs" className="pt-4">…scrolls inside…</Tabs.Panel>
+</Tabs>`}
+      >
+        <div style={{ maxWidth: 560, height: 180, display: "flex", flexDirection: "column", border: "1px solid #E0DED8", borderRadius: 6, overflow: "hidden" }}>
+          <Tabs defaultTab="data" fill>
+            <Tabs.List className="px-4">
+              <Tabs.Tab id="data">Data</Tabs.Tab>
+              <Tabs.Tab id="docs">Docs</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel id="data" className="p-4">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <p key={i} style={{ fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#606060", margin: "4px 0" }}>
+                  Row {i + 1} — scrolls inside the panel
+                </p>
+              ))}
+            </Tabs.Panel>
+            <Tabs.Panel id="docs" className="p-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#1A1A1A" }}>
+                Documentation content
+              </p>
+            </Tabs.Panel>
+          </Tabs>
+        </div>
+      </CatalogueExample>
+    </CatalogueSection>
+  );
+}
+
+/* ─── CardSelect demo ────────────────────────────────────────────────────── */
+
+const PROVENANCE_OPTIONS = [
+  { value: "upload",  label: "File upload",   description: "CSV, Excel, JSON or Parquet" },
+  { value: "api",     label: "API endpoint",  description: "REST or GraphQL live feed" },
+  { value: "db",      label: "Database",      description: "Direct JDBC or ODBC connection" },
+  { value: "manual",  label: "Manual entry",  description: "Enter or paste data by hand" },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "mobility",    label: "Mobility",      description: "Transport & movement data" },
+  { value: "env",         label: "Environment",   description: "Air, noise, green spaces" },
+  { value: "economy",     label: "Economy",       description: "Economic indicators & statistics" },
+  { value: "governance",  label: "Governance",    description: "Administrative & regulatory data" },
+];
+
+function CardSelectSingleDemo(): React.ReactElement {
+  const [val, setVal] = useState<string | null>(null);
+  return (
+    <div style={{ maxWidth: 480 }}>
+      <CardSelect options={PROVENANCE_OPTIONS} value={val} onChange={setVal} />
+      {val && (
+        <p style={{ marginTop: 8, fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#606060" }}>
+          Selected: {val}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CardSelectMultiDemo(): React.ReactElement {
+  const [vals, setVals] = useState<string[]>([]);
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <CardSelect multiple options={CATEGORY_OPTIONS} value={vals} onChange={setVals} direction="row" />
+      {vals.length > 0 && (
+        <p style={{ marginTop: 8, fontFamily: "Montserrat, sans-serif", fontSize: 12, color: "#606060" }}>
+          Selected: {vals.join(", ")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CardSelectSection(): React.ReactElement {
+  return (
+    <CatalogueSection title="CardSelect">
+      <CatalogueExample
+        label="Single-select (radio — provenance category)"
+        code={`<CardSelect
+  options={[
+    { value: "upload", label: "File upload",  description: "CSV, Excel, JSON or Parquet" },
+    { value: "api",    label: "API endpoint", description: "REST or GraphQL live feed" },
+    { value: "db",     label: "Database",     description: "Direct JDBC or ODBC connection" },
+    { value: "manual", label: "Manual entry", description: "Enter or paste data by hand" },
+  ]}
+  value={provenance}
+  onChange={setProvenance}
+/>`}
+      >
+        <CardSelectSingleDemo />
+      </CatalogueExample>
+
+      <CatalogueExample
+        label="Multi-select row layout (checkbox — theme categories)"
+        code={`<CardSelect
+  multiple
+  options={categories}
+  value={selected}
+  onChange={setSelected}
+  direction="row"
+/>`}
+      >
+        <CardSelectMultiDemo />
+      </CatalogueExample>
+
+      <CatalogueExample
+        label="With a disabled option"
+        code={`<CardSelect
+  options={[
+    { value: "a", label: "Available source", description: "Ready to connect" },
+    { value: "b", label: "Coming soon",      description: "Not yet supported", disabled: true },
+  ]}
+  value="a"
+/>`}
+      >
+        <div style={{ maxWidth: 480 }}>
+          <CardSelect
+            options={[
+              { value: "a", label: "Available source", description: "Ready to connect" },
+              { value: "b", label: "Coming soon",      description: "Not yet supported", disabled: true },
+            ]}
+            value="a"
+          />
+        </div>
+      </CatalogueExample>
+    </CatalogueSection>
   );
 }
 
@@ -1075,6 +1257,12 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
         </CatalogueSection>
 
         {/* ── Icon ─────────────────────────────────────────────────────── */}
+        {/* ── Tabs ─────────────────────────────────────────────────────── */}
+        <TabsSection />
+
+        {/* ── CardSelect ───────────────────────────────────────────────── */}
+        <CardSelectSection />
+
         <CatalogueSection title="Icon">
           <CatalogueExample label="Sizes and labelled vs decorative" code={`<Icon symbol="⌕" size="xs" />
 <Icon symbol="⌕" size="md" />
