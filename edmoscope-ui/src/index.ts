@@ -69,6 +69,9 @@ export type { BreadcrumbProps, BreadcrumbItem } from "./navigation/Breadcrumb.ts
 export { GlobalSearch }           from "./navigation/GlobalSearch.tsx";
 export type { GlobalSearchProps, SearchResult, SearchResultGroup } from "./navigation/GlobalSearch.tsx";
 
+export { Tabs }                   from "./navigation/Tabs.tsx";
+export type { TabsProps, TabListProps, TabProps, TabPanelProps } from "./navigation/Tabs.tsx";
+
 // ── Feedback ──────────────────────────────────────────────────────────────────
 export { EmptyState }             from "./feedback/EmptyState.tsx";
 export type { EmptyStateProps }   from "./feedback/EmptyState.tsx";
@@ -78,6 +81,9 @@ export type { ErrorBoundaryProps } from "./feedback/ErrorBoundary.tsx";
 
 export { ToastProvider, useToast } from "./feedback/Toast.tsx";
 export type { ToastProviderProps } from "./feedback/Toast.tsx";
+
+export { Notice }                 from "./feedback/Notice.tsx";
+export type { NoticeProps }       from "./feedback/Notice.tsx";
 
 // ── Forms ────────────────────────────────────────────────────────────────────
 export { Input, Textarea }        from "./forms/Input.tsx";
@@ -91,6 +97,12 @@ export type { SearchBoxProps }    from "./forms/SearchBox.tsx";
 
 export { FilterBar }              from "./forms/FilterBar.tsx";
 export type { FilterBarProps, FilterDefinition, FilterState } from "./forms/FilterBar.tsx";
+
+export { Combobox }               from "./forms/Combobox.tsx";
+export type { ComboboxProps, ComboboxOption } from "./forms/Combobox.tsx";
+
+export { CardSelect }             from "./forms/CardSelect.tsx";
+export type { CardSelectProps, CardSelectMultiProps, CardSelectOption } from "./forms/CardSelect.tsx";
 
 // ── Data display ──────────────────────────────────────────────────────────────
 export { DataTable }              from "./data/DataTable.tsx";
@@ -106,7 +118,7 @@ export { TierBadge }              from "./data/TierBadge.tsx";
 export type { TierBadgeProps }    from "./data/TierBadge.tsx";
 
 export { SqlWorkbench }           from "./data/SqlWorkbench.tsx";
-export type { SqlWorkbenchProps } from "./data/SqlWorkbench.tsx";
+export type { SqlWorkbenchProps, SavedQuery, ResultRow, DrawerState } from "./data/SqlWorkbench.tsx";
 
 // ── Overlays ──────────────────────────────────────────────────────────────────
 export { Modal }                  from "./overlays/Modal.tsx";

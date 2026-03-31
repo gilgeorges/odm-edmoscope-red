@@ -11,10 +11,11 @@ export interface SelectOption {
 }
 
 /**
- * Select — dropdown select field.
+ * Select — dropdown select field with visible chevron indicator.
  *
  * Styled consistently with Input. Spreads remaining props onto the underlying
- * `<select>` element.
+ * `<select>` element. Wraps the native select in a relative container so the
+ * downward chevron SVG can be positioned absolutely and is always visible.
  *
  * @example
  * <Label htmlFor="type">Asset type</Label>
@@ -51,28 +52,50 @@ export function Select({
   ...rest
 }: SelectProps): React.ReactElement {
   return (
-    <select
-      {...rest}
-      className={[
-        "block w-full font-sans text-[13px] text-odm-ink",
-        "bg-odm-surface border border-odm-line border-b-2",
-        "px-2.5 py-1.5 outline-none appearance-none cursor-pointer",
-        "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23606060' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E\")] bg-no-repeat bg-[right_10px_center] bg-[length:10px_6px] pr-8",
-        "transition-colors duration-100",
-        error
-          ? "border-b-odm-bad-bd focus:border-odm-bad-bd"
-          : "border-b-odm-line-h focus:border-b-lux-red",
-        "focus:border-odm-line-h",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        className,
-      ].join(" ")}
-    >
-      {placeholder && (
-        <option value="" disabled hidden>{placeholder}</option>
-      )}
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
-      ))}
-    </select>
+    <div className="relative">
+      <select
+        {...rest}
+        className={[
+          "block w-full font-sans text-[13px] text-odm-ink",
+          "bg-white border border-odm-line border-b-2",
+          "px-2.5 py-1.5 pr-8 outline-none appearance-none cursor-pointer",
+          "transition-colors duration-100",
+          error
+            ? "border-b-odm-bad-bd focus:border-b-odm-bad-bd"
+            : "border-b-odm-line-h focus:border-b-lux-red",
+          "disabled:opacity-50 disabled:cursor-not-allowed",
+          className,
+        ].join(" ")}
+      >
+        {placeholder && (
+          <option value="" disabled hidden>{placeholder}</option>
+        )}
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+
+      {/* Downward chevron — pointer-events-none so clicks pass through */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-odm-mid"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="10"
+          height="6"
+          viewBox="0 0 10 6"
+          fill="none"
+        >
+          <path
+            d="M1 1l4 4 4-4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </div>
   );
 }
