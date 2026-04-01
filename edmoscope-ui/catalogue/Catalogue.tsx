@@ -119,7 +119,7 @@ function CatalogueExample({ label, code, children, bg = "white" }: {
         fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 11,
         background: "#1A1A1A", color: "rgba(255,255,255,0.7)",
         padding: "10px 14px", margin: 0, overflowX: "auto",
-        lineHeight: 1.6,
+        lineHeight: 1.6, maxWidth: "100%",
       }}>{code}</pre>
     </div>
   );
