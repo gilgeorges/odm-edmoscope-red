@@ -104,8 +104,7 @@ export function EntryCard({
   return (
     <article
       aria-label={title}
-      className={["grid mb-1.5 cursor-pointer", className].join(" ")}
-      style={{ gridTemplateColumns: "10px 1fr", gap: "0 18px" }}
+      className={["grid [grid-template-columns:10px_1fr] [gap:0_18px] mb-1.5 cursor-pointer", className].join(" ")}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

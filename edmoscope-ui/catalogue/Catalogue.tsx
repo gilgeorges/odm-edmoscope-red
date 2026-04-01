@@ -1232,18 +1232,18 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
         {/* ── Notice ───────────────────────────────────────────────────── */}
         <CatalogueSection title="Notice">
           <CatalogueExample label="All variants" code={`<Notice variant="info">Dataset ingestion completed successfully.</Notice>
-<Notice variant="warn" title="Schema not defined">No CSVW schema registered for this asset.</Notice>
+<Notice variant="warning" title="Schema not defined">No CSVW schema registered for this asset.</Notice>
 <Notice variant="danger" title="3 sources require attention">SBB Passenger Flows, Cycling Routes — over 30 days stale.</Notice>
 <Notice variant="ok" title="Registration confirmed">The asset has been added to the catalogue.</Notice>`}>
             <div style={{ display: "flex", flexDirection: "column", gap: 0, maxWidth: 540 }}>
               <Notice variant="info">Dataset ingestion completed successfully.</Notice>
-              <Notice variant="warn" title="Schema not defined">No CSVW schema has been registered for this asset.</Notice>
+              <Notice variant="warning" title="Schema not defined">No CSVW schema has been registered for this asset.</Notice>
               <Notice variant="danger" title="3 sources require attention">SBB Passenger Flows, Cycling Routes — last received more than 30 days ago.</Notice>
               <Notice variant="ok" title="Registration confirmed">The asset has been added to the catalogue.</Notice>
             </div>
           </CatalogueExample>
-          <CatalogueExample label="Without title" code={`<Notice variant="warn">Approaching 30 days since last receipt.</Notice>`} bg="#EFEFED">
-            <Notice variant="warn">Approaching 30 days since last receipt.</Notice>
+          <CatalogueExample label="Without title" code={`<Notice variant="warning">Approaching 30 days since last receipt.</Notice>`} bg="#EFEFED">
+            <Notice variant="warning">Approaching 30 days since last receipt.</Notice>
           </CatalogueExample>
         </CatalogueSection>
 
