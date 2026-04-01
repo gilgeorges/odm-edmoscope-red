@@ -53,6 +53,9 @@ export type { SectionProps }      from "./layout/Section.tsx";
 export { Divider }                from "./layout/Divider.tsx";
 export type { DividerProps }      from "./layout/Divider.tsx";
 
+export { ListDetailPanel }        from "./layout/ListDetailPanel.tsx";
+export type { ListDetailPanelProps } from "./layout/ListDetailPanel.tsx";
+
 // ── Navigation ───────────────────────────────────────────────────────────────
 export { TopBar, IDMLogo, LuxLion, UserChip } from "./navigation/TopBar.tsx";
 export type { TopBarProps, IDMLogoProps, LuxLionProps, UserChipProps } from "./navigation/TopBar.tsx";
