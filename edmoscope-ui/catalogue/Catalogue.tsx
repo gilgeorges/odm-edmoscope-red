@@ -32,8 +32,6 @@ import {
   DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench,
   // Overlays
   Modal, Drawer, ConfirmDialog,
-  // Tokens
-  COLORS,
 } from "../src/index.ts";
 
 import type { ColumnDef, FilterDefinition } from "../src/index.ts";
@@ -44,23 +42,23 @@ import type { ColumnDef, FilterDefinition } from "../src/index.ts";
 
 function CatalogueShell({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
-    <div style={{ fontFamily: "Montserrat, sans-serif", background: "#EFEFED", minHeight: "100vh", color: "#1A1A1A" }}>
-      {/* Header */}
-      <div style={{ background: "#1A1A1A", borderBottom: `3px solid ${COLORS.luxRed}`, padding: "16px 36px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
-            EDMoScope UI
-          </div>
-          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)" }} />
-          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+    <AppShell
+      navigation={[]}
+      navRightSlot={
+        <div className="flex items-center gap-4 px-2">
+          <span className="text-white/90 font-bold text-sm tracking-tight">EDMoScope UI</span>
+          <div className="w-px h-5 bg-white/15" />
+          <span className="text-white/40 text-[11px] font-medium tracking-[0.08em] uppercase">
             Component Catalogue
-          </div>
+          </span>
         </div>
-      </div>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "40px 36px 80px" }}>
+      }
+      drawerClearance=""
+    >
+      <div className="max-w-[960px] mx-auto px-9 py-10 pb-20">
         {children}
       </div>
-    </div>
+    </AppShell>
   );
 }
 

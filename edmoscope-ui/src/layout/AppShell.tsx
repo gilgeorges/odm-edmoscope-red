@@ -53,11 +53,11 @@ export interface AppShellProps {
    */
   drawer?: React.ReactNode;
   /**
-   * Bottom padding added to `<main>` to clear the collapsed drawer tab strip.
-   * Set this to the drawer's collapsed height (36px by default).
-   * @default 36
+   * Tailwind class(es) added to `<main>` to clear the collapsed drawer tab strip.
+   * Set this to a bottom-padding class matching the drawer's collapsed height.
+   * @default "pb-[60px]"
    */
-  drawerClearance?: number;
+  drawerClearance?: string;
   /** Page content rendered inside `<main>`. */
   children: React.ReactNode;
 }
@@ -97,7 +97,7 @@ export interface AppShellProps {
  *   navRightSlot={<SqlToggleBtn />}
  *   footer={<AppFooter />}
  *   drawer={<SqlWorkbench … />}
- *   drawerClearance={36}
+ *   drawerClearance="pb-[60px]"
  * >
  *   <Outlet />
  * </AppShell>
@@ -110,7 +110,7 @@ export function AppShell({
   navRightSlot,
   footer,
   drawer,
-  drawerClearance = 36,
+  drawerClearance = "pb-[60px]",
   children,
 }: AppShellProps): React.ReactElement {
   return (
@@ -172,8 +172,7 @@ export function AppShell({
       <main
         id="main-content"
         aria-label="Page content"
-        className="flex-1 w-full"
-        style={{ paddingBottom: drawerClearance + 24 }}
+        className={["flex-1 w-full", drawerClearance].filter(Boolean).join(" ")}
       >
         {children}
       </main>
