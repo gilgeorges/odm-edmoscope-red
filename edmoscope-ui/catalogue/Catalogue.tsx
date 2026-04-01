@@ -184,32 +184,6 @@ const DEMO_DATASETS = [
   { id: "DS-003", title: "Park & Ride Occupancy", sub: "Parking · Derived" },
 ];
 
-function ListDetailPanelDemo({ open }: { open: boolean }): React.ReactElement {
-  return (
-    <div className="relative flex w-full overflow-hidden border border-odm-line-l rounded" style={{ height: 260 }}>
-      <ListDetailPanel
-        panelOpen={open}
-        list={
-          <ul className="divide-y divide-odm-line-l w-full">
-            {DEMO_DATASETS.map(ds => (
-              <li key={ds.id} className="px-4 py-3">
-                <p className="text-sm font-semibold text-odm-ink">{ds.title}</p>
-                <p className="text-xs text-odm-muted">{ds.sub}</p>
-              </li>
-            ))}
-          </ul>
-        }
-        detail={
-          <div className="p-6 h-full border-l border-odm-line-l">
-            <p className="text-sm font-semibold text-odm-ink mb-1">MobiScout Count Data</p>
-            <p className="text-xs text-odm-muted">Urban mobility measurement — source layer</p>
-          </div>
-        }
-      />
-    </div>
-  );
-}
-
 function ListDetailPanelInteractive(): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<typeof DEMO_DATASETS[0] | null>(null);
@@ -220,48 +194,48 @@ function ListDetailPanelInteractive(): React.ReactElement {
   }
 
   return (
-    <div className="relative flex w-full overflow-hidden border border-odm-line-l rounded" style={{ height: 260 }}>
-      <ListDetailPanel
-        panelOpen={open}
-        list={
-          <ul className="divide-y divide-odm-line-l w-full">
-            {DEMO_DATASETS.map(ds => (
-              <li key={ds.id}>
-                <button
-                  type="button"
-                  onClick={() => handleSelect(ds)}
-                  className="w-full text-left px-4 py-3 hover:bg-odm-faint focus-visible:outline-2 focus-visible:outline-lux-red transition-colors"
-                >
-                  <p className="text-sm font-semibold text-odm-ink">{ds.title}</p>
-                  <p className="text-xs text-odm-muted">{ds.sub}</p>
-                </button>
-              </li>
-            ))}
-          </ul>
-        }
-        detail={
-          selected ? (
-            <div className="p-6 h-full border-l border-odm-line-l flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-odm-ink">{selected.title}</p>
-                  <p className="text-xs text-odm-muted mt-0.5">{selected.sub}</p>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Close detail panel"
-                  onClick={() => setOpen(false)}
-                  className="text-odm-mid hover:text-odm-ink text-base leading-none focus-visible:outline-2 focus-visible:outline-lux-red"
-                >
-                  ✕
-                </button>
+    <ListDetailPanel
+      contained
+      panelOpen={open}
+      className="border border-odm-line-l rounded h-[260px]"
+      list={
+        <ul className="divide-y divide-odm-line-l w-full">
+          {DEMO_DATASETS.map(ds => (
+            <li key={ds.id}>
+              <button
+                type="button"
+                onClick={() => handleSelect(ds)}
+                className="w-full text-left px-4 py-3 hover:bg-odm-faint focus-visible:outline-2 focus-visible:outline-lux-red transition-colors"
+              >
+                <p className="text-sm font-semibold text-odm-ink">{ds.title}</p>
+                <p className="text-xs text-odm-muted">{ds.sub}</p>
+              </button>
+            </li>
+          ))}
+        </ul>
+      }
+      detail={
+        selected ? (
+          <div className="p-6 h-full border-l border-odm-line-l flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-odm-ink">{selected.title}</p>
+                <p className="text-xs text-odm-muted mt-0.5">{selected.sub}</p>
               </div>
-              <p className="text-xs text-odm-soft">Detail content for <strong>{selected.id}</strong> goes here.</p>
+              <button
+                type="button"
+                aria-label="Close detail panel"
+                onClick={() => setOpen(false)}
+                className="text-odm-mid hover:text-odm-ink text-base leading-none focus-visible:outline-2 focus-visible:outline-lux-red"
+              >
+                ✕
+              </button>
             </div>
-          ) : null
-        }
-      />
-    </div>
+            <p className="text-xs text-odm-soft">Detail content for <strong>{selected.id}</strong> goes here.</p>
+          </div>
+        ) : null
+      }
+    />
   );
 }
 
@@ -816,37 +790,18 @@ export default function Catalogue(): React.ReactElement {
         {/* ── Layout: ListDetailPanel ───────────────────────────────────── */}
         <CatalogueSection title="ListDetailPanel">
           <CatalogueExample
-            label="Panel open — detail slides in beside list"
-            code={`const [open, setOpen] = useState(true);
-
-<ListDetailPanel
-  panelOpen={open}
-  list={<div>…list content…</div>}
-  detail={<div>…detail content…</div>}
-/>`}
-          >
-            <ListDetailPanelDemo open />
-          </CatalogueExample>
-          <CatalogueExample
-            label="Panel closed — full-width list"
+            label="Interactive — click a row to open, × to close (contained mode)"
             code={`const [open, setOpen] = useState(false);
 
+// Use contained={true} when embedded inside a bounded container.
+// Omit it (default false) for full-page usage where the mobile
+// panel should cover the viewport via fixed positioning.
 <ListDetailPanel
+  contained
   panelOpen={open}
-  list={<div>…list content…</div>}
-  detail={<div>…detail content…</div>}
-/>`}
-          >
-            <ListDetailPanelDemo open={false} />
-          </CatalogueExample>
-          <CatalogueExample
-            label="Interactive — click a row to open, × to close"
-            code={`const [open, setOpen] = useState(false);
-
-<ListDetailPanel
-  panelOpen={open}
-  list={<button onClick={() => setOpen(true)}>Open detail</button>}
-  detail={<button onClick={() => setOpen(false)}>✕ Close</button>}
+  className="h-[480px]"
+  list={<DatasetList onSelect={() => setOpen(true)} />}
+  detail={<DatasetDetail onClose={() => setOpen(false)} />}
 />`}
           >
             <ListDetailPanelInteractive />
