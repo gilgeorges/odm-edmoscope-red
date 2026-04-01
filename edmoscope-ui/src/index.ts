@@ -120,6 +120,16 @@ export type { TierBadgeProps }    from "./data/TierBadge.tsx";
 export { SqlWorkbench }           from "./data/SqlWorkbench.tsx";
 export type { SqlWorkbenchProps, SavedQuery, ResultRow, DrawerState } from "./data/SqlWorkbench.tsx";
 
+// ── Cards ─────────────────────────────────────────────────────────────────────
+export { EntryCard }               from "./cards/EntryCard.tsx";
+export type { EntryCardProps, EntryCardStatus } from "./cards/EntryCard.tsx";
+
+export { StackPanel }              from "./cards/StackPanel.tsx";
+export type { StackPanelProps }    from "./cards/StackPanel.tsx";
+
+export { ProvenanceCard }          from "./cards/ProvenanceCard.tsx";
+export type { ProvenanceCardProps, ProvenanceAccent, ProvenancePanelEntry } from "./cards/ProvenanceCard.tsx";
+
 // ── Overlays ──────────────────────────────────────────────────────────────────
 export { Modal }                  from "./overlays/Modal.tsx";
 export type { ModalProps }        from "./overlays/Modal.tsx";

@@ -31,6 +31,8 @@ import {
   Tabs,
   // Data
   DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench,
+  // Cards
+  EntryCard, StackPanel, ProvenanceCard,
   // Overlays
   Modal, Drawer, ConfirmDialog,
 } from "../src/index.ts";
@@ -49,6 +51,7 @@ const CAT_NAV: NavItem[] = [
   { id: "feedback",   label: "Feedback" },
   { id: "forms",      label: "Forms" },
   { id: "data",       label: "Data" },
+  { id: "cards",      label: "Cards" },
   { id: "overlays",   label: "Overlays" },
 ];
 
@@ -1229,18 +1232,18 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
         {/* ── Notice ───────────────────────────────────────────────────── */}
         <CatalogueSection title="Notice">
           <CatalogueExample label="All variants" code={`<Notice variant="info">Dataset ingestion completed successfully.</Notice>
-<Notice variant="warning" title="Schema not defined">No CSVW schema registered for this asset.</Notice>
+<Notice variant="warn" title="Schema not defined">No CSVW schema registered for this asset.</Notice>
 <Notice variant="danger" title="3 sources require attention">SBB Passenger Flows, Cycling Routes — over 30 days stale.</Notice>
 <Notice variant="ok" title="Registration confirmed">The asset has been added to the catalogue.</Notice>`}>
             <div style={{ display: "flex", flexDirection: "column", gap: 0, maxWidth: 540 }}>
               <Notice variant="info">Dataset ingestion completed successfully.</Notice>
-              <Notice variant="warning" title="Schema not defined">No CSVW schema has been registered for this asset.</Notice>
+              <Notice variant="warn" title="Schema not defined">No CSVW schema has been registered for this asset.</Notice>
               <Notice variant="danger" title="3 sources require attention">SBB Passenger Flows, Cycling Routes — last received more than 30 days ago.</Notice>
               <Notice variant="ok" title="Registration confirmed">The asset has been added to the catalogue.</Notice>
             </div>
           </CatalogueExample>
-          <CatalogueExample label="Without title" code={`<Notice variant="warning">Approaching 30 days since last receipt.</Notice>`} bg="#EFEFED">
-            <Notice variant="warning">Approaching 30 days since last receipt.</Notice>
+          <CatalogueExample label="Without title" code={`<Notice variant="warn">Approaching 30 days since last receipt.</Notice>`} bg="#EFEFED">
+            <Notice variant="warn">Approaching 30 days since last receipt.</Notice>
           </CatalogueExample>
         </CatalogueSection>
 
@@ -1287,6 +1290,175 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
 
         {/* ── CardSelect ───────────────────────────────────────────────── */}
         <CardSelectSection />
+
+        {/* ── Cards ────────────────────────────────────────────────────── */}
+        <div id="cat-cards" />
+        <CatalogueSection title="EntryCard">
+          <CatalogueExample
+            label="Dataset — fresh (ok)"
+            code={`<EntryCard
+  status="ok"
+  header={<><Badge variant="default">Source</Badge><span className="font-sans text-[11px] text-odm-muted">DS-0042 · STATEC</span></>}
+  title="Occupation — Morning peak (STATEC)"
+  description="Car and transit OD matrix for Luxembourg City, derived from mobile probe data."
+  footer={<><Badge>transport</Badge><Badge>OD matrix</Badge></>}
+  onClick={() => {}}
+/>`}
+          >
+            <EntryCard
+              status="ok"
+              header={
+                <>
+                  <Badge variant="default">Source</Badge>
+                  <span className="font-sans text-[11px] text-odm-muted">DS-0042 · STATEC</span>
+                </>
+              }
+              title="Occupation — Morning peak (STATEC)"
+              description="Car and transit OD matrix for Luxembourg City, derived from mobile probe data."
+              footer={
+                <>
+                  <Badge>transport</Badge>
+                  <Badge>OD matrix</Badge>
+                </>
+              }
+              onClick={() => {}}
+            />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Query — warning (aging data)"
+            code={`<EntryCard
+  status="warning"
+  header={<><Badge variant="warn">Draft</Badge><span className="font-sans text-[11px] text-odm-muted">QR-0117</span></>}
+  title="Evening peak modal split by corridor"
+  description="Aggregates bus, tram and car counts across 12 corridors for the PM peak window."
+  footer={<><Badge>modal split</Badge><Badge>evening</Badge></>}
+  onClick={() => {}}
+/>`}
+          >
+            <EntryCard
+              status="warning"
+              header={
+                <>
+                  <Badge variant="warn">Draft</Badge>
+                  <span className="font-sans text-[11px] text-odm-muted">QR-0117</span>
+                </>
+              }
+              title="Evening peak modal split by corridor"
+              description="Aggregates bus, tram and car counts across 12 corridors for the PM peak window."
+              footer={
+                <>
+                  <Badge>modal split</Badge>
+                  <Badge>evening</Badge>
+                </>
+              }
+              onClick={() => {}}
+            />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Danger + Info + Neutral — status dot showcase"
+            code={`<EntryCard status="danger"  title="Broken pipeline — last run failed" onClick={() => {}} />
+<EntryCard status="info"    title="Certification in review" onClick={() => {}} />
+<EntryCard status="neutral" title="Archived dataset (read-only)" />`}
+          >
+            <div className="flex flex-col gap-1.5">
+              <EntryCard status="danger"  title="Broken pipeline — last run failed"   onClick={() => {}} />
+              <EntryCard status="info"    title="Certification in review"              onClick={() => {}} />
+              <EntryCard status="neutral" title="Archived dataset (read-only)" />
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="StackPanel — list with sticky header"
+            code={`<StackPanel header={<span className="font-bold text-sm text-odm-ink">3 datasets</span>}>
+  <EntryCard status="ok"      title="Occupation AM" onClick={() => {}} />
+  <EntryCard status="warning" title="Pedestrian counts" onClick={() => {}} />
+  <EntryCard status="danger"  title="Parking occupancy" onClick={() => {}} />
+</StackPanel>`}
+          >
+            <StackPanel header={<span className="font-sans font-bold text-sm text-odm-ink">3 datasets</span>}>
+              <EntryCard status="ok"      title="Occupation AM"       onClick={() => {}} />
+              <EntryCard status="warning" title="Pedestrian counts"   onClick={() => {}} />
+              <EntryCard status="danger"  title="Parking occupancy"   onClick={() => {}} />
+            </StackPanel>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        <CatalogueSection title="ProvenanceCard">
+          <CatalogueExample
+            label="Info accent — upstream source with panels"
+            code={`<ProvenanceCard
+  accent="info"
+  headerLeft={<span className="font-sans font-bold text-sm text-odm-ink">Occupation — Morning peak</span>}
+  headerRight={<Badge variant="default">Source</Badge>}
+  description="Derived from mobile operator probe data processed by the ODM ingestion pipeline v2."
+  panels={[
+    { label: "Owner",    content: <span className="font-sans text-[13px] text-odm-ink">STATEC</span> },
+    { label: "Refresh",  content: <span className="font-sans text-[13px] text-odm-ink">Monthly</span> },
+    { label: "Format",   content: <span className="font-sans text-[13px] text-odm-ink">CSV-W</span> },
+    { label: "Licence",  content: <span className="font-sans text-[13px] text-odm-ink">CC-BY 4.0</span> },
+  ]}
+/>`}
+          >
+            <ProvenanceCard
+              accent="info"
+              headerLeft={<span className="font-sans font-bold text-sm text-odm-ink">Occupation — Morning peak</span>}
+              headerRight={<Badge variant="default">Source</Badge>}
+              description="Derived from mobile operator probe data processed by the ODM ingestion pipeline v2."
+              panels={[
+                { label: "Owner",   content: <span className="font-sans text-[13px] text-odm-ink">STATEC</span> },
+                { label: "Refresh", content: <span className="font-sans text-[13px] text-odm-ink">Monthly</span> },
+                { label: "Format",  content: <span className="font-sans text-[13px] text-odm-ink">CSV-W</span> },
+                { label: "Licence", content: <span className="font-sans text-[13px] text-odm-ink">CC-BY 4.0</span> },
+              ]}
+            />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Ok accent — certified output"
+            code={`<ProvenanceCard
+  accent="ok"
+  headerLeft={<span className="font-sans font-bold text-sm text-odm-ok">Certified output — Modal split 2024</span>}
+  headerRight={<Badge variant="ok">Gold tier</Badge>}
+  description="Certified by OdM quality team on 2024-11-15. All upstream sources validated."
+  panels={[
+    { label: "Certified by", content: <span className="font-sans text-[13px] text-odm-ink">OdM QA team</span> },
+    { label: "Valid until",  content: <span className="font-sans text-[13px] text-odm-ink">2025-11-15</span> },
+  ]}
+/>`}
+          >
+            <ProvenanceCard
+              accent="ok"
+              headerLeft={<span className="font-sans font-bold text-sm text-odm-ok">Certified output — Modal split 2024</span>}
+              headerRight={<Badge variant="ok">Gold tier</Badge>}
+              description="Certified by OdM quality team on 2024-11-15. All upstream sources validated."
+              panels={[
+                { label: "Certified by", content: <span className="font-sans text-[13px] text-odm-ink">OdM QA team</span> },
+                { label: "Valid until",  content: <span className="font-sans text-[13px] text-odm-ink">2025-11-15</span> },
+              ]}
+            />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Warning + Danger accents"
+            code={`<ProvenanceCard accent="warning" headerLeft={<span>Source not refreshed in 45 days</span>} description="Last successful ingestion: 2025-02-14." />
+<ProvenanceCard accent="danger"  headerLeft={<span>Pipeline broken — schema mismatch</span>} description="Column 'trip_id' missing from upstream CSV." />`}
+          >
+            <div className="flex flex-col">
+              <ProvenanceCard
+                accent="warning"
+                headerLeft={<span className="font-sans font-semibold text-sm text-odm-warn">Source not refreshed in 45 days</span>}
+                description="Last successful ingestion: 2025-02-14. Upstream provider has not delivered new data."
+              />
+              <ProvenanceCard
+                accent="danger"
+                headerLeft={<span className="font-sans font-semibold text-sm text-odm-bad">Pipeline broken — schema mismatch</span>}
+                description="Column 'trip_id' missing from upstream CSV. Manual intervention required."
+              />
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
 
         <CatalogueSection title="Icon">
           <CatalogueExample label="Sizes and labelled vs decorative" code={`<Icon symbol="⌕" size="xs" />
