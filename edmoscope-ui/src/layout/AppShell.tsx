@@ -36,6 +36,12 @@ export interface AppShellProps {
   /** Called when a nav item is clicked. */
   onNavSelect?: (id: string) => void;
   /**
+   * Optional brand/logo area rendered at the far left of the nav bar,
+   * before the navigation items. Use this for an app name or logo mark
+   * so the brand and tabs share one row without consuming extra height.
+   */
+  navBrand?: React.ReactNode;
+  /**
    * Additional content rendered on the right side of the nav bar
    * (e.g. an SQL workbench toggle button).
    */
@@ -107,6 +113,7 @@ export function AppShell({
   navigation,
   activeNavId,
   onNavSelect,
+  navBrand,
   navRightSlot,
   footer,
   drawer,
@@ -139,7 +146,12 @@ export function AppShell({
 
         {/* Primary navigation bar — dark background */}
         <nav aria-label="Primary navigation" className="bg-odm-ink">
-          <div className="max-w-[1036px] mx-auto px-7 flex overflow-x-auto [scrollbar-width:none]">
+          <div className="max-w-[1036px] mx-auto px-7 flex items-stretch overflow-x-auto [scrollbar-width:none]">
+            {navBrand && (
+              <div className="flex items-center flex-shrink-0 pr-4 mr-2 border-r border-white/10">
+                {navBrand}
+              </div>
+            )}
             {navigation.map((item) => {
               const isActive = activeNavId === item.id;
               return (

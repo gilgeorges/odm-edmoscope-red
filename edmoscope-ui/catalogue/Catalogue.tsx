@@ -12,6 +12,7 @@
  */
 
 import React, { useState } from "react";
+import type { NavItem } from "../src/index.ts";
 
 import {
   // Primitives
@@ -40,20 +41,37 @@ import type { ColumnDef, FilterDefinition } from "../src/index.ts";
    Catalogue shell components
 ───────────────────────────────────────────────────────────────────────────── */
 
+const CAT_NAV: NavItem[] = [
+  { id: "primitives", label: "Primitives" },
+  { id: "typography", label: "Typography" },
+  { id: "layout",     label: "Layout" },
+  { id: "navigation", label: "Navigation" },
+  { id: "feedback",   label: "Feedback" },
+  { id: "forms",      label: "Forms" },
+  { id: "data",       label: "Data" },
+  { id: "overlays",   label: "Overlays" },
+];
+
 function CatalogueShell({ children }: { children: React.ReactNode }): React.ReactElement {
+  const [activeNav, setActiveNav] = useState("primitives");
+
+  function handleNavSelect(id: string): void {
+    setActiveNav(id);
+    document.getElementById(`cat-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <AppShell
-      navigation={[]}
-      navRightSlot={
-        <div className="flex items-center gap-4 px-2">
+      navBrand={
+        <div className="flex items-center gap-2.5">
           <span className="text-white/90 font-bold text-sm tracking-tight">EDMoScope UI</span>
-          <div className="w-px h-5 bg-white/15" />
-          <span className="text-white/40 text-[11px] font-medium tracking-[0.08em] uppercase">
-            Component Catalogue
-          </span>
+          <span className="text-white/25 text-[10px] font-medium tracking-[0.1em] uppercase">Catalogue</span>
         </div>
       }
-      drawerClearance=""
+      navigation={CAT_NAV}
+      activeNavId={activeNav}
+      onNavSelect={handleNavSelect}
+      drawerClearance="pb-16"
     >
       <div className="max-w-[960px] mx-auto px-9 py-10 pb-20">
         {children}
@@ -516,7 +534,8 @@ export default function Catalogue(): React.ReactElement {
     <ToastProvider>
       <CatalogueShell>
 
-        {/* ── Primitives: Badge ─────────────────────────────────────────── */}
+        {/* ── Primitives ────────────────────────────────────────────────── */}
+        <div id="cat-primitives" />
         <CatalogueSection title="Badge">
           <CatalogueExample label="All variants" code={`<Badge variant="default">Default</Badge>
 <Badge variant="ok">Saved</Badge>
@@ -615,6 +634,7 @@ export default function Catalogue(): React.ReactElement {
         </CatalogueSection>
 
         {/* ── Typography ────────────────────────────────────────────────── */}
+        <div id="cat-typography" />
         <CatalogueSection title="Heading + Eyebrow">
           <CatalogueExample label="Heading levels" code={`<Heading level={1}>H1 — Data Assets</Heading>
 <Heading level={2}>H2 — Overview</Heading>
@@ -658,7 +678,8 @@ export default function Catalogue(): React.ReactElement {
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Layout: PageHeader ────────────────────────────────────────── */}
+        {/* ── Layout ────────────────────────────────────────────────────── */}
+        <div id="cat-layout" />
         <CatalogueSection title="PageHeader">
           <CatalogueExample label="With section + subtitle + action" code={`<PageHeader
   section="Data Assets"
@@ -698,7 +719,8 @@ export default function Catalogue(): React.ReactElement {
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Navigation: Breadcrumb ────────────────────────────────────── */}
+        {/* ── Navigation ────────────────────────────────────────────────── */}
+        <div id="cat-navigation" />
         <CatalogueSection title="Breadcrumb">
           <CatalogueExample label="Full chain" code={`<Breadcrumb items={[
   { label: "Datasets", onClick: () => {} },
@@ -865,7 +887,8 @@ const [query, setQuery] = useState("");
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Feedback: EmptyState ──────────────────────────────────────── */}
+        {/* ── Feedback ──────────────────────────────────────────────────── */}
+        <div id="cat-feedback" />
         <CatalogueSection title="EmptyState">
           <CatalogueExample label="With action" code={`<EmptyState
   title="No datasets found"
@@ -912,7 +935,8 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Forms: Input ─────────────────────────────────────────────── */}
+        {/* ── Forms ─────────────────────────────────────────────────────── */}
+        <div id="cat-forms" />
         <CatalogueSection title="Input + Textarea">
           <CatalogueExample label="Input states" code={`<Input placeholder="Default input" value={val} onChange={…} />
 <Input placeholder="Error state" error value={val} onChange={…} />
@@ -992,7 +1016,8 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
           </CatalogueExample>
         </CatalogueSection>
 
-        {/* ── Data: TierBadge ───────────────────────────────────────────── */}
+        {/* ── Data ──────────────────────────────────────────────────────── */}
+        <div id="cat-data" />
         <CatalogueSection title="TierBadge">
           <CatalogueExample label="All tiers (hover for tooltip)" code={`<TierBadge tier="bronze" />
 <TierBadge tier="silver" />
@@ -1073,6 +1098,8 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
         {/* ── Data: SqlWorkbench ───────────────────────────────────────── */}
         <SqlWorkbenchSection />
 
+        {/* ── Overlays ──────────────────────────────────────────────────── */}
+        <div id="cat-overlays" />
         {/* ── Overlays: Modal ───────────────────────────────────────────── */}
         <CatalogueSection title="Modal">
           <CatalogueExample label="Open / close" code={`<Modal open={open} onClose={close} aria-labelledby="modal-title">
