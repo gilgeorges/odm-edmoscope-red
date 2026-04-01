@@ -36,6 +36,12 @@ export interface AppShellProps {
   /** Called when a nav item is clicked. */
   onNavSelect?: (id: string) => void;
   /**
+   * Optional brand/logo area rendered at the far left of the nav bar,
+   * before the navigation items. Use this for an app name or logo mark
+   * so the brand and tabs share one row without consuming extra height.
+   */
+  navBrand?: React.ReactNode;
+  /**
    * Additional content rendered on the right side of the nav bar
    * (e.g. an SQL workbench toggle button).
    */
@@ -53,11 +59,11 @@ export interface AppShellProps {
    */
   drawer?: React.ReactNode;
   /**
-   * Bottom padding added to `<main>` to clear the collapsed drawer tab strip.
-   * Set this to the drawer's collapsed height (36px by default).
-   * @default 36
+   * Tailwind class(es) added to `<main>` to clear the collapsed drawer tab strip.
+   * Set this to a bottom-padding class matching the drawer's collapsed height.
+   * @default "pb-[60px]"
    */
-  drawerClearance?: number;
+  drawerClearance?: string;
   /** Page content rendered inside `<main>`. */
   children: React.ReactNode;
 }
@@ -97,7 +103,7 @@ export interface AppShellProps {
  *   navRightSlot={<SqlToggleBtn />}
  *   footer={<AppFooter />}
  *   drawer={<SqlWorkbench … />}
- *   drawerClearance={36}
+ *   drawerClearance="pb-[60px]"
  * >
  *   <Outlet />
  * </AppShell>
@@ -107,10 +113,11 @@ export function AppShell({
   navigation,
   activeNavId,
   onNavSelect,
+  navBrand,
   navRightSlot,
   footer,
   drawer,
-  drawerClearance = 36,
+  drawerClearance = "pb-[60px]",
   children,
 }: AppShellProps): React.ReactElement {
   return (
@@ -139,7 +146,12 @@ export function AppShell({
 
         {/* Primary navigation bar — dark background */}
         <nav aria-label="Primary navigation" className="bg-odm-ink">
-          <div className="max-w-[1036px] mx-auto px-7 flex overflow-x-auto [scrollbar-width:none]">
+          <div className="max-w-[1036px] mx-auto px-7 flex items-stretch overflow-x-auto [scrollbar-width:none]">
+            {navBrand && (
+              <div className="flex items-center flex-shrink-0 pr-4 mr-2 border-r border-white/10">
+                {navBrand}
+              </div>
+            )}
             {navigation.map((item) => {
               const isActive = activeNavId === item.id;
               return (
@@ -172,8 +184,7 @@ export function AppShell({
       <main
         id="main-content"
         aria-label="Page content"
-        className="flex-1 w-full"
-        style={{ paddingBottom: drawerClearance + 24 }}
+        className={["flex-1 w-full", drawerClearance].filter(Boolean).join(" ")}
       >
         {children}
       </main>
