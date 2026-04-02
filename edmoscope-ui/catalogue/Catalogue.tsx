@@ -934,6 +934,42 @@ export default function Catalogue(): React.ReactElement {
           </CatalogueExample>
         </CatalogueSection>
 
+        {/* ── Navigation: NavTab ───────────────────────────────────────── */}
+        <CatalogueSection title="NavTab">
+          <CatalogueExample
+            label="Default — button-based tabs (plain onClick)"
+            code={`<NavTab label="Home"    onClick={() => navigate("/")} />
+<NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+<NavTab label="Actors"  onClick={() => navigate("/actors")} />`}
+          >
+            <div className="flex h-10 bg-odm-ink px-2">
+              <NavTab label="Home"    onClick={() => undefined} />
+              <NavTab label="Data"    isActive onClick={() => undefined} />
+              <NavTab label="Actors"  onClick={() => undefined} />
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label={`as="a" — renders as native anchor (swap for router Link in production)`}
+            code={`// Replace "a" with your router's Link component:
+// import { Link } from "@tanstack/react-router";
+//
+// <NavTab as={Link} to="/"      label="Home"   isActive={pathname === "/"} />
+// <NavTab as={Link} to="/data"  label="Data"   isActive={pathname === "/data"} />
+// <NavTab as={Link} to="/actors" label="Actors" isActive={pathname === "/actors"} />
+
+<NavTab as="a" href="/"       label="Home" />
+<NavTab as="a" href="/data"   label="Data"   isActive />
+<NavTab as="a" href="/actors" label="Actors" />`}
+          >
+            <div className="flex h-10 bg-odm-ink px-2">
+              <NavTab as="a" href="#" label="Home" />
+              <NavTab as="a" href="#" label="Data"   isActive />
+              <NavTab as="a" href="#" label="Actors" />
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
         {/* ── Navigation: GlobalSearch ──────────────────────────────────── */}
         <CatalogueSection title="GlobalSearch">
           <CatalogueExample
@@ -1453,6 +1489,76 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
               <EntryCard status="info"    title="Certification in review"              onClick={() => {}} />
               <EntryCard status="neutral" title="Archived dataset (read-only)" />
             </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label={`as="a" — SPA link card (swap for router Link in production)`}
+            code={`// Replace "a" with your router's Link component:
+// import { Link } from "@tanstack/react-router";
+//
+// <EntryCard as={Link} to="/datasets/occ-am" status="ok" title="..." />
+
+<EntryCard
+  as="a"
+  href="/datasets/occ-am"
+  status="ok"
+  title="Occupation — Morning peak (STATEC)"
+  description="Car and transit OD matrix for Luxembourg City."
+/>
+<EntryCard
+  as="a"
+  href="/datasets/ped-counts"
+  status="warning"
+  title="Pedestrian counts — City centre"
+  description="Aggregated sensor readings from 8 counting stations."
+/>`}
+          >
+            <div className="flex flex-col gap-1.5">
+              <EntryCard
+                as="a"
+                href="#"
+                status="ok"
+                title="Occupation — Morning peak (STATEC)"
+                description="Car and transit OD matrix for Luxembourg City."
+              />
+              <EntryCard
+                as="a"
+                href="#"
+                status="warning"
+                title="Pedestrian counts — City centre"
+                description="Aggregated sensor readings from 8 counting stations."
+              />
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Static card — no navigation (page header usage)"
+            code={`// No \`as\` prop and no \`onClick\` → purely static, used as a detail-page header
+<EntryCard
+  status="ok"
+  header={<><Badge variant="default">Source</Badge><span>DS-0042 · STATEC</span></>}
+  title="Occupation — Morning peak (STATEC)"
+  description="Car and transit OD matrix for Luxembourg City, derived from mobile probe data."
+  footer={<><Badge>transport</Badge><Badge>OD matrix</Badge></>}
+/>`}
+          >
+            <EntryCard
+              status="ok"
+              header={
+                <>
+                  <Badge variant="default">Source</Badge>
+                  <span className="font-sans text-[11px] text-odm-muted">DS-0042 · STATEC</span>
+                </>
+              }
+              title="Occupation — Morning peak (STATEC)"
+              description="Car and transit OD matrix for Luxembourg City, derived from mobile probe data."
+              footer={
+                <>
+                  <Badge>transport</Badge>
+                  <Badge>OD matrix</Badge>
+                </>
+              }
+            />
           </CatalogueExample>
 
           <CatalogueExample
