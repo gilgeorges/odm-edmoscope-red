@@ -107,6 +107,9 @@ export type { ComboboxProps, ComboboxOption } from "./forms/Combobox.tsx";
 export { CardSelect }             from "./forms/CardSelect.tsx";
 export type { CardSelectProps, CardSelectMultiProps, CardSelectOption } from "./forms/CardSelect.tsx";
 
+export { FileUpload }             from "./forms/FileUpload.tsx";
+export type { FileUploadProps, UploadEntry, UploadStatus } from "./forms/FileUpload.tsx";
+
 // ── Data display ──────────────────────────────────────────────────────────────
 export { DataTable }              from "./data/DataTable.tsx";
 export type { DataTableProps, ColumnDef } from "./data/DataTable.tsx";

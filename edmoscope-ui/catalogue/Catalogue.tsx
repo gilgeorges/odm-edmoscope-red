@@ -26,7 +26,7 @@ import {
   // Feedback
   EmptyState, ErrorBoundary, ToastProvider, useToast, Notice,
   // Forms
-  Input, Textarea, Select, SearchBox, FilterBar, Combobox, CardSelect,
+  Input, Textarea, Select, SearchBox, FilterBar, Combobox, CardSelect, FileUpload,
   // Navigation (Tabs)
   Tabs,
   // Data
@@ -588,6 +588,35 @@ function CardSelectSection(): React.ReactElement {
         </div>
       </CatalogueExample>
     </CatalogueSection>
+  );
+}
+
+/* ── FileUpload demo ─────────────────────────────────────────────────────── */
+function FileUploadDemo({ shouldFail = false }: { shouldFail?: boolean }): React.ReactElement {
+  return (
+    <FileUpload
+      accept=".csv,.json,.parquet"
+      onUpload={(file, onProgress) =>
+        new Promise<void>((resolve, reject) => {
+          let pct = 0;
+          const tick = setInterval(() => {
+            pct = Math.min(pct + Math.random() * 25, 95);
+            onProgress(pct);
+            if (pct >= 95) {
+              clearInterval(tick);
+              setTimeout(() => {
+                if (shouldFail) {
+                  reject(new Error("Server error 500"));
+                } else {
+                  onProgress(100);
+                  resolve();
+                }
+              }, 300);
+            }
+          }, 200);
+        })
+      }
+    />
   );
 }
 
@@ -1412,6 +1441,66 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
 
         {/* ── CardSelect ───────────────────────────────────────────────── */}
         <CardSelectSection />
+
+        {/* ── FileUpload ───────────────────────────────────────────────── */}
+        <CatalogueSection title="FileUpload">
+          <CatalogueExample
+            label="Drop zone — success (simulated progress)"
+            code={`<FileUpload
+  accept=".csv,.json,.parquet"
+  onUpload={async (file, onProgress) => {
+    // Call onProgress(0..100) to advance the bar.
+    // Resolve to mark ok, reject (string | Error) to mark failed.
+    await uploadToServer(file, onProgress);
+  }}
+/>`}
+            bg="#EFEFED"
+          >
+            <div style={{ maxWidth: 520 }}>
+              <FileUploadDemo />
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Drop zone — failure (simulated server error)"
+            code={`<FileUpload
+  accept=".csv,.json,.parquet"
+  onUpload={async (_file, _onProgress) => {
+    throw new Error("Server error 500");
+  }}
+/>`}
+            bg="#EFEFED"
+          >
+            <div style={{ maxWidth: 520 }}>
+              <FileUploadDemo shouldFail />
+            </div>
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="No accept filter — any file type"
+            code={`<FileUpload
+  dropLabel="Drop any file here or browse"
+  onUpload={handleUpload}
+/>`}
+            bg="#EFEFED"
+          >
+            <div style={{ maxWidth: 520 }}>
+              <FileUpload
+                dropLabel="Drop any file here or browse"
+                onUpload={(_file, onProgress) =>
+                  new Promise<void>((resolve) => {
+                    let pct = 0;
+                    const t = setInterval(() => {
+                      pct = Math.min(pct + 30, 100);
+                      onProgress(pct);
+                      if (pct >= 100) { clearInterval(t); resolve(); }
+                    }, 150);
+                  })
+                }
+              />
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
 
         {/* ── Cards ────────────────────────────────────────────────────── */}
         <div id="cat-cards" />
