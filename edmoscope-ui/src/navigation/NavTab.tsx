@@ -9,9 +9,13 @@ interface NavTabOwnProps {
    * forward router-specific props (e.g. `to`, `activeProps`, `inactiveProps`)
    * directly on the element.
    *
+   * When using a router `Link` that natively sets `data-status="active"` on
+   * the DOM element (e.g. TanStack Router), you do not need `isActive` — the
+   * router's own `data-status` drives both styling and `aria-current`.
+   *
    * @example
-   * // TanStack Router — active state driven by the router
-   * <NavTab as={Link} to="/" label="Home" isActive={isActive} />
+   * // TanStack Router — active state driven by the router, no isActive needed
+   * <NavTab as={Link} to="/" label="Home" />
    */
   as?: React.ElementType;
 
@@ -20,8 +24,11 @@ interface NavTabOwnProps {
 
   /**
    * Whether this tab represents the current page/route.
-   * Sets `aria-current="page"` and renders the red bottom indicator.
-   * When using a router `Link`, derive this from the router's active state.
+   *
+   * Used as a fallback `data-status="active"` value when the rendered `Tag`
+   * does not set its own `data-status` (e.g. when `as` is a plain `"button"`).
+   * When using a router `Link` that natively sets `data-status`, omit this prop.
+   *
    * @default false
    */
   isActive?: boolean;
@@ -50,14 +57,14 @@ export type NavTabProps<T extends React.ElementType = "button"> = NavTabOwnProps
  * render as a navigation link — all router-specific props are forwarded.
  *
  * @example
- * // Plain button
+ * // Plain button — isActive controls data-status
  * <NavTab label="Home" onClick={() => navigate("/")} />
  * <NavTab label="Data" isActive onClick={() => navigate("/data")} />
  *
  * @example
- * // TanStack Router Link
- * <NavTab as={Link} to="/" label="Home" isActive={pathname === "/"} />
- * <NavTab as={Link} to="/data" label="Data" isActive={pathname === "/data"} />
+ * // TanStack Router Link — router sets data-status, no isActive needed
+ * <NavTab as={Link} to="/" label="Home" />
+ * <NavTab as={Link} to="/data" label="Data" />
  */
 export function NavTab<T extends React.ElementType = "button">({
   as,
@@ -67,19 +74,31 @@ export function NavTab<T extends React.ElementType = "button">({
   ...rest
 }: NavTabProps<T>): React.ReactElement {
   const Tag = (as ?? "button") as React.ElementType;
+
+  // Use the caller-supplied data-status if present (e.g. router sets it), otherwise
+  // fall back to deriving it from the isActive prop (e.g. plain button usage).
+  const restRecord = rest as Record<string, unknown>;
+  const dataStatus =
+    "data-status" in restRecord
+      ? (restRecord["data-status"] as string | undefined)
+      : isActive
+        ? "active"
+        : undefined;
+
   return (
     <Tag
       {...(rest as object)}
-      aria-current={isActive ? "page" : undefined}
+      data-status={dataStatus}
+      aria-current={dataStatus === "active" ? "page" : undefined}
       className={[
         "flex items-center px-4 h-full -mb-px",
         "font-sans text-xs tracking-[0.02em] whitespace-nowrap flex-shrink-0",
         "bg-transparent border-0 border-b-2 cursor-pointer",
         "transition-colors duration-100",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
-        isActive
-          ? "text-white/90 font-semibold border-b-lux-red"
-          : "text-white/40 font-normal border-b-transparent hover:text-white/70",
+        // Inactive defaults — overridden by data-[status=active]: variants below
+        "text-white/40 font-normal border-b-transparent hover:text-white/70",
+        "data-[status=active]:text-white/90 data-[status=active]:font-semibold data-[status=active]:border-b-lux-red",
         className,
       ].join(" ")}
     >
