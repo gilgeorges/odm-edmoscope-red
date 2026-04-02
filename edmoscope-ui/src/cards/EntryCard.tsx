@@ -22,10 +22,8 @@ const STATUS_CLASSES: Record<EntryCardStatus, { dot: string; accent: string }> =
     neutral: { dot: "bg-odm-muted",accent: "border-l-odm-muted"   },
   };
 
-/**
- * EntryCardProps — props for the {@link EntryCard} component.
- */
-export interface EntryCardProps {
+/** EntryCard own props, independent of the card body element type. */
+interface EntryCardOwnProps {
   /**
    * Semantic status driving the thread dot colour and the hover accent border.
    * @default "neutral"
@@ -56,14 +54,44 @@ export interface EntryCardProps {
   footer?: React.ReactNode;
 
   /**
-   * Click handler for the card body. When provided the body receives
-   * `role="button"` and keyboard activation (Enter / Space).
+   * Click handler for the card body. When provided and `as` is not set,
+   * the body receives `role="button"` and keyboard activation (Enter / Space).
+   * When `as` is a link component, prefer passing `to` / `href` instead.
    */
   onClick?: () => void;
 
   /** Additional CSS classes applied to the root `<article>` element. */
   className?: string;
+
+  /**
+   * The component to render the interactive card body as. Defaults to `"div"`.
+   *
+   * Pass a router `Link` component (e.g. TanStack Router `Link`) to enable
+   * full SPA navigation — all router-specific props (e.g. `to`) are forwarded
+   * to this element. When `as` is provided, `role="button"` and keyboard
+   * activation are omitted in favour of the link's native semantics.
+   *
+   * Omit (or leave as `undefined`) when the card acts as a static element,
+   * for example as a page header on the dataset detail view.
+   *
+   * @example
+   * // Static card body — no navigation (page header, non-interactive list)
+   * <EntryCard title="My Dataset" />
+   *
+   * // SPA link card (TanStack Router)
+   * <EntryCard as={Link} to="/datasets/occ-am" title="My Dataset" />
+   */
+  as?: React.ElementType;
 }
+
+/**
+ * EntryCard props — own props merged with the props of the card body element (default: `"div"`).
+ *
+ * When `as` is set to a link component, all props accepted by that component
+ * (e.g. `to`, `activeProps`) become valid on `EntryCard`.
+ */
+export type EntryCardProps<T extends React.ElementType = "div"> = EntryCardOwnProps &
+  Omit<React.ComponentPropsWithoutRef<T>, keyof EntryCardOwnProps>;
 
 /**
  * EntryCard — Registry-style list item card.
@@ -72,17 +100,37 @@ export interface EntryCardProps {
  * Each card has a left "thread" (status dot + connector line) and a body
  * that reveals a coloured left-border accent on hover.
  *
+ * The card body defaults to a `<div>`. Pass `as={Link}` (from your router)
+ * to make the whole body a SPA navigation link. Omit `as` entirely when the
+ * card is used as a static element (e.g. a page header on the detail view).
+ *
  * @example
+ * // Clickable list card — legacy onClick style
  * <EntryCard
  *   status="ok"
- *   header={<Badge variant="info">Source</Badge>}
  *   title="Occupation — Morning peak (STATEC)"
- *   description="Car and transit OD matrix for Luxembourg City, derived from mobile probe data."
- *   footer={<><Badge>transport</Badge><Badge>OD</Badge></>}
  *   onClick={() => navigate("/datasets/occ-am")}
  * />
+ *
+ * @example
+ * // SPA link card (TanStack Router)
+ * <EntryCard
+ *   as={Link}
+ *   to="/datasets/occ-am"
+ *   status="ok"
+ *   title="Occupation — Morning peak (STATEC)"
+ * />
+ *
+ * @example
+ * // Static page header — no navigation
+ * <EntryCard
+ *   status="ok"
+ *   title="Occupation — Morning peak (STATEC)"
+ *   description="Car and transit OD matrix for Luxembourg City."
+ * />
  */
-export function EntryCard({
+export function EntryCard<T extends React.ElementType = "div">({
+  as,
   status = "neutral",
   header,
   title,
@@ -90,14 +138,19 @@ export function EntryCard({
   footer,
   onClick,
   className = "",
-}: EntryCardProps): React.ReactElement {
+  ...rest
+}: EntryCardProps<T>): React.ReactElement {
   const [hovered, setHovered] = useState(false);
   const { dot, accent } = STATUS_CLASSES[status];
+  const Body = (as ?? "div") as React.ElementType;
+
+  // role="button" + keyboard activation only when body is a plain div with onClick
+  const isInteractiveDiv = !as && !!onClick;
 
   function handleKeyDown(e: React.KeyboardEvent): void {
-    if (onClick && (e.key === "Enter" || e.key === " ")) {
+    if (isInteractiveDiv && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
-      onClick();
+      onClick!();
     }
   }
 
@@ -120,12 +173,13 @@ export function EntryCard({
         <div className="w-px flex-1 mt-1.5 bg-odm-line-l" aria-hidden="true" />
       </div>
 
-      {/* Card body */}
-      <div
-        role={onClick ? "button" : undefined}
-        tabIndex={onClick ? 0 : undefined}
+      {/* Card body — div, router Link, or any other element via `as` prop */}
+      <Body
+        {...(rest as object)}
+        role={isInteractiveDiv ? "button" : undefined}
+        tabIndex={isInteractiveDiv ? 0 : undefined}
         onClick={onClick}
-        onKeyDown={handleKeyDown}
+        onKeyDown={isInteractiveDiv ? handleKeyDown : undefined}
         className={[
           "border-l-[3px] px-4 py-[14px] pl-[18px]",
           "transition-colors duration-[120ms]",
@@ -158,7 +212,7 @@ export function EntryCard({
             {footer}
           </div>
         )}
-      </div>
+      </Body>
     </article>
   );
 }
