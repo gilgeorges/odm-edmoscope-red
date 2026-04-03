@@ -82,8 +82,8 @@ export type { EmptyStateProps }   from "./feedback/EmptyState.tsx";
 export { ErrorBoundary }          from "./feedback/ErrorBoundary.tsx";
 export type { ErrorBoundaryProps } from "./feedback/ErrorBoundary.tsx";
 
-export { ToastProvider, useToast } from "./feedback/Toast.tsx";
-export type { ToastProviderProps } from "./feedback/Toast.tsx";
+export { ToastProvider, useToast, toastStore } from "./feedback/Toast.tsx";
+export type { ToastProviderProps, ToastApi } from "./feedback/Toast.tsx";
 
 export { Notice }                 from "./feedback/Notice.tsx";
 export type { NoticeProps }       from "./feedback/Notice.tsx";
