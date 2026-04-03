@@ -37,7 +37,7 @@ interface ToastItem {
   duration: number;
 }
 
-interface ToastApi {
+export interface ToastApi {
   success: (title: string, message?: string, duration?: number) => string;
   error:   (title: string, message?: string, duration?: number) => string;
   warn:    (title: string, message?: string, duration?: number) => string;
@@ -47,6 +47,43 @@ interface ToastApi {
 }
 
 const ToastContext = createContext<ToastApi | null>(null);
+
+// ─── External store ───────────────────────────────────────────────────────────
+// Holds a reference to the live ToastApi once <ToastProvider> is mounted.
+// Populated/cleared by ToastProvider via useEffect; never touched elsewhere.
+const _storeRef: { api: ToastApi | null } = { api: null };
+
+/**
+ * toastStore — imperative toast handle for use **outside React components**.
+ *
+ * Delegates to the mounted `<ToastProvider>` instance. All methods are
+ * no-ops (returning `""` for id-returning calls) when no provider is mounted.
+ *
+ * Typical use-case: TanStack Router error callbacks.
+ *
+ * @example
+ * // router.ts
+ * import { toastStore } from "edmoscope-ui";
+ *
+ * const router = createRouter({
+ *   routeTree,
+ *   defaultOnError: (err) =>
+ *     toastStore.error("Route error", err.message),
+ * });
+ *
+ * // createFileRoute usage
+ * export const Route = createFileRoute("/dashboard")({
+ *   onError: ({ error }) => toastStore.error("Load failed", error.message),
+ * });
+ */
+export const toastStore: ToastApi = {
+  success:    (title, message, duration) => _storeRef.api?.success(title, message, duration) ?? "",
+  error:      (title, message, duration) => _storeRef.api?.error(title, message, duration) ?? "",
+  warn:       (title, message, duration) => _storeRef.api?.warn(title, message, duration) ?? "",
+  info:       (title, message, duration) => _storeRef.api?.info(title, message, duration) ?? "",
+  dismiss:    (id) => _storeRef.api?.dismiss(id),
+  dismissAll: () => _storeRef.api?.dismissAll(),
+};
 
 const TOAST_VARIANT_CLASSES: Record<ToastType, string> = {
   success: "border-l-odm-ok-bd bg-odm-ok-bg",
@@ -178,6 +215,13 @@ export function ToastProvider({ children }: ToastProviderProps): React.ReactElem
     dismiss,
     dismissAll,
   }), [add, dismiss, dismissAll]);
+
+  // Register this provider instance in the external store so toastStore works
+  // outside React (e.g. TanStack Router onError callbacks).
+  useEffect(() => {
+    _storeRef.api = toast;
+    return () => { _storeRef.api = null; };
+  }, [toast]);
 
   return (
     <ToastContext.Provider value={toast}>
