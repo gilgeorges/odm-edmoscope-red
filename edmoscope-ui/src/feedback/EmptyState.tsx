@@ -28,7 +28,11 @@ export interface EmptyStateProps {
    * Placed below the description.
    */
   action?: React.ReactNode;
-  /** Additional CSS classes on the container. */
+  /**
+   * Additional CSS classes on the container.
+   * To fill remaining viewport height pass `"flex-1"` — the parent chain must
+   * propagate height (flex-col + min-h-0) for this to take effect.
+   */
   className?: string;
 }
 
