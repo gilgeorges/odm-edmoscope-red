@@ -85,7 +85,7 @@ export function TopNavShell({
   children,
 }: TopNavShellProps): React.ReactElement {
   return (
-    <div className="min-h-screen bg-odm-page text-odm-ink font-sans flex flex-col">
+    <div className="h-screen bg-odm-page text-odm-ink font-sans flex flex-col">
       {/* Skip navigation */}
       <a
         href="#main-content"
