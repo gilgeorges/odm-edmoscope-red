@@ -687,6 +687,23 @@ export default function Catalogue(): React.ReactElement {
           <CatalogueExample label="Disabled" code={`<Button disabled>Disabled</Button>`} bg="#EFEFED">
             <Button disabled>Disabled</Button>
           </CatalogueExample>
+          <CatalogueExample
+            label={`as="a" — renders as anchor (swap for router Link in production)`}
+            code={`// Replace "a" with your router's Link component:
+// import { Link } from "@tanstack/react-router";
+//
+// <Button as={Link} to="/datasets" variant="primary">View datasets</Button>
+
+<Button as="a" href="#" variant="primary">Primary link</Button>
+<Button as="a" href="#" variant="secondary">Secondary link</Button>
+<Button as="a" href="#" variant="ghost">Ghost link</Button>`}
+          >
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Button as="a" href="#" variant="primary">Primary link</Button>
+              <Button as="a" href="#" variant="secondary">Secondary link</Button>
+              <Button as="a" href="#" variant="ghost">Ghost link</Button>
+            </div>
+          </CatalogueExample>
         </CatalogueSection>
 
         {/* ── Primitives: Spinner ───────────────────────────────────────── */}
