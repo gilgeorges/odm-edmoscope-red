@@ -138,7 +138,7 @@ export function TopNavShell({
       <main
         id="main-content"
         aria-label="Page content"
-        className={["flex-1", drawerClearance].filter(Boolean).join(" ")}
+        className={["flex-1 min-h-0 flex flex-col", drawerClearance].filter(Boolean).join(" ")}
       >
         {children}
       </main>
