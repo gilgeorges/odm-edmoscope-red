@@ -192,6 +192,38 @@ function GlobalSearchLinkDemo(): React.ReactElement {
   );
 }
 
+function GlobalSearchActionsDemo(): React.ReactElement {
+  const [open, setOpen]   = React.useState(false);
+  const [query, setQuery] = React.useState("");
+
+  const DEMO_RESULTS = query.length >= 2 ? [
+    { label: "Datasets · 2", results: [
+      { id: "DS-001", title: "MobiScout Count Data", subtitle: "MobiScout AG · Source", icon: "▣" },
+      { id: "DS-002", title: "SEBES Traffic Counts", subtitle: "SEBES · Source",        icon: "▣" },
+    ]},
+  ] : [];
+
+  const QUICK_ACTIONS = [
+    { id: "new-dataset", label: "Register dataset",    icon: "▣", shortcut: "⌘N",  onAction: () => alert("Register dataset") },
+    { id: "new-actor",   label: "Register actor",      icon: "◎", shortcut: "⌘⇧A", onAction: () => alert("Register actor")   },
+    { id: "sql",         label: "Open SQL workbench",  icon: "⌗", shortcut: "⌘⇧Q", onAction: () => alert("Open workbench")   },
+  ];
+
+  return (
+    <GlobalSearch
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => { setOpen(false); setQuery(""); }}
+      query={query}
+      onQueryChange={setQuery}
+      results={DEMO_RESULTS}
+      onSelect={r => alert(`Selected: ${r.title}`)}
+      quickActions={QUICK_ACTIONS}
+      placeholder="Search or run an action…"
+    />
+  );
+}
+
 function ToastDemo(): React.ReactElement {
   const { toast } = useToast();
   return (
@@ -1139,6 +1171,34 @@ const form = useForm({ defaultValues: { q: "" } });
                 a catalogue dependency. The code snippet above shows the real
                 wiring for a consuming app. */}
             <GlobalSearchDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label={'Quick actions — idle list + searchable (type \u201creg\u201d or \u201csql\u201d to filter)'}
+            code={`const quickActions = [
+  { id: "new-dataset", label: "Register dataset",   icon: "▣", shortcut: "⌘N",
+    onAction: () => openWizard("dataset") },
+  { id: "new-actor",   label: "Register actor",     icon: "◎", shortcut: "⌘⇧A",
+    onAction: () => openWizard("actor") },
+  { id: "sql",         label: "Open SQL workbench", icon: "⌗", shortcut: "⌘⇧Q",
+    to: "/sql", // or onAction if no router Link needed
+  },
+];
+
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); setQuery(""); }}
+  query={query}
+  onQueryChange={setQuery}
+  results={results}
+  onSelect={r => navigate(r.to ?? "/")}
+  quickActions={quickActions}
+  linkComponent={Link}
+  placeholder="Search or run an action…"
+/>`}
+          >
+            <GlobalSearchActionsDemo />
           </CatalogueExample>
         </CatalogueSection>
 
