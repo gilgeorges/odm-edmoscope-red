@@ -11,7 +11,7 @@
  * with at least 2–3 <CatalogueExample> entries.
  */
 
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import type { NavItem } from "../src/index.ts";
 
 import {
@@ -37,7 +37,7 @@ import {
   Modal, Drawer, ConfirmDialog,
 } from "../src/index.ts";
 
-import type { ColumnDef, FilterDefinition } from "../src/index.ts";
+import type { ColumnDef, FilterDefinition, UploadEntry } from "../src/index.ts";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Catalogue shell components
@@ -592,30 +592,109 @@ function CardSelectSection(): React.ReactElement {
 }
 
 /* ── FileUpload demo ─────────────────────────────────────────────────────── */
+
+/** Runs a simulated upload interval for one entry, storing the timer by id. */
+function startSimInterval(
+  id: string,
+  fromPct: number,
+  shouldFail: boolean,
+  intervals: React.MutableRefObject<Map<string, ReturnType<typeof setInterval>>>,
+  setEntries: React.Dispatch<React.SetStateAction<UploadEntry[]>>,
+): void {
+  let pct = fromPct;
+  const tick = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 25, 95);
+    setEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, progress: Math.round(pct) } : e)),
+    );
+    if (pct >= 95) {
+      clearInterval(tick);
+      intervals.current.delete(id);
+      setTimeout(() => {
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.id === id
+              ? shouldFail
+                ? { ...e, status: "error" as const, error: "Server error 500" }
+                : { ...e, status: "ok" as const, progress: 100 }
+              : e,
+          ),
+        );
+      }, 300);
+    }
+  }, 200);
+  intervals.current.set(id, tick);
+}
+
 function FileUploadDemo({ shouldFail = false }: { shouldFail?: boolean }): React.ReactElement {
+  const [entries, setEntries] = useState<UploadEntry[]>([]);
+  const intervals = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
+
+  const handleFilesAdded = useCallback(
+    (files: File[]) => {
+      const newEntries: UploadEntry[] = files.map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        file,
+        status: "uploading" as const,
+        progress: 0,
+      }));
+      setEntries((prev) => [...prev, ...newEntries]);
+      for (const entry of newEntries) {
+        startSimInterval(entry.id, 0, shouldFail, intervals, setEntries);
+      }
+    },
+    [shouldFail],
+  );
+
+  const handlePause = useCallback((id: string) => {
+    const tick = intervals.current.get(id);
+    if (tick) { clearInterval(tick); intervals.current.delete(id); }
+    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, status: "paused" as const } : e)));
+  }, []);
+
+  const handleResume = useCallback(
+    (id: string) => {
+      const current = intervals.current.get(id);
+      if (current) return; // already running
+      const entry = entries.find((e) => e.id === id);
+      setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, status: "uploading" as const } : e)));
+      startSimInterval(id, entry?.progress ?? 0, shouldFail, intervals, setEntries);
+    },
+    [entries, shouldFail],
+  );
+
+  const handleAbort = useCallback((id: string) => {
+    const tick = intervals.current.get(id);
+    if (tick) { clearInterval(tick); intervals.current.delete(id); }
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  }, []);
+
+  const handleRetry = useCallback(
+    (id: string) => {
+      setEntries((prev) =>
+        prev.map((e) =>
+          e.id === id ? { ...e, status: "uploading" as const, progress: 0, error: undefined } : e,
+        ),
+      );
+      startSimInterval(id, 0, shouldFail, intervals, setEntries);
+    },
+    [shouldFail],
+  );
+
+  const handleRemove = useCallback((id: string) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  }, []);
+
   return (
     <FileUpload
       accept=".csv,.json,.parquet"
-      onUpload={(file, onProgress) =>
-        new Promise<void>((resolve, reject) => {
-          let pct = 0;
-          const tick = setInterval(() => {
-            pct = Math.min(pct + Math.random() * 25, 95);
-            onProgress(pct);
-            if (pct >= 95) {
-              clearInterval(tick);
-              setTimeout(() => {
-                if (shouldFail) {
-                  reject(new Error("Server error 500"));
-                } else {
-                  onProgress(100);
-                  resolve();
-                }
-              }, 300);
-            }
-          }, 200);
-        })
-      }
+      entries={entries}
+      onFilesAdded={handleFilesAdded}
+      onPause={handlePause}
+      onResume={handleResume}
+      onAbort={handleAbort}
+      onRetry={handleRetry}
+      onRemove={handleRemove}
     />
   );
 }
@@ -1465,11 +1544,21 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
             label="Drop zone — success (simulated progress)"
             code={`<FileUpload
   accept=".csv,.json,.parquet"
-  onUpload={async (file, onProgress) => {
-    // Call onProgress(0..100) to advance the bar.
-    // Resolve to mark ok, reject (string | Error) to mark failed.
-    await uploadToServer(file, onProgress);
+  entries={entries}
+  onFilesAdded={(files) => {
+    // Create your tus Upload instances here, then push to entries state.
+    for (const file of files) {
+      const id = crypto.randomUUID();
+      // const upload = new tus.Upload(file, { ... });
+      // upload.start();
+      setEntries(prev => [...prev, { id, file, status: "uploading", progress: 0 }]);
+    }
   }}
+  onPause={(id) => { /* upload.abort(); */ setEntries(...) }}
+  onResume={(id) => { /* upload.start(); */ setEntries(...) }}
+  onAbort={(id) => { /* upload.abort(); */ setEntries(prev => prev.filter(e => e.id !== id)) }}
+  onRetry={(id) => { /* restart upload */ setEntries(...) }}
+  onRemove={(id) => setEntries(prev => prev.filter(e => e.id !== id))}
 />`}
             bg="#EFEFED"
           >
@@ -1482,9 +1571,10 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
             label="Drop zone — failure (simulated server error)"
             code={`<FileUpload
   accept=".csv,.json,.parquet"
-  onUpload={async (_file, _onProgress) => {
-    throw new Error("Server error 500");
-  }}
+  entries={entries}
+  onFilesAdded={handleFilesAdded}
+  onRetry={handleRetry}
+  onRemove={handleRemove}
 />`}
             bg="#EFEFED"
           >
@@ -1497,24 +1587,18 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
             label="No accept filter — any file type"
             code={`<FileUpload
   dropLabel="Drop any file here or browse"
-  onUpload={handleUpload}
+  entries={entries}
+  onFilesAdded={handleFilesAdded}
+  onPause={handlePause}
+  onResume={handleResume}
+  onAbort={handleAbort}
+  onRetry={handleRetry}
+  onRemove={handleRemove}
 />`}
             bg="#EFEFED"
           >
             <div style={{ maxWidth: 520 }}>
-              <FileUpload
-                dropLabel="Drop any file here or browse"
-                onUpload={(_file, onProgress) =>
-                  new Promise<void>((resolve) => {
-                    let pct = 0;
-                    const t = setInterval(() => {
-                      pct = Math.min(pct + 30, 100);
-                      onProgress(pct);
-                      if (pct >= 100) { clearInterval(t); resolve(); }
-                    }, 150);
-                  })
-                }
-              />
+              <FileUploadDemo />
             </div>
           </CatalogueExample>
         </CatalogueSection>
