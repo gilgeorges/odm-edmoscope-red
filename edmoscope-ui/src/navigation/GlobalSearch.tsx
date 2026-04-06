@@ -18,6 +18,14 @@ export interface SearchResult {
   icon?: string;
   /** Any additional data you want back in the onSelect callback. */
   meta?: unknown;
+  /**
+   * Pre-computed route string for this result.
+   * When provided alongside `linkComponent` on GlobalSearch, the result row
+   * renders as a router Link instead of a button.
+   *
+   * @example "/datasets/DS-001"
+   */
+  to?: string;
 }
 
 /**
@@ -31,6 +39,30 @@ export interface SearchResultGroup {
 }
 
 /**
+ * Props forwarded to the `renderInput` render prop.
+ * Spread these onto the `<input>` (or compatible custom field element) inside
+ * your `renderInput` callback so GlobalSearch retains focus management and
+ * query binding.
+ */
+export interface SearchInputProps {
+  /** Current query value. */
+  value: string;
+  /** Called on every keystroke. */
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  /** Placeholder text (forwarded from GlobalSearchProps.placeholder). */
+  placeholder: string;
+  /** Accessible label for the input. */
+  "aria-label": string;
+  /** Tailwind classes for layout and typography. */
+  className: string;
+  /**
+   * Ref needed so GlobalSearch can auto-focus the input on open.
+   * Must reach an actual `<input>` element for focus to work.
+   */
+  ref: React.RefObject<HTMLInputElement | null>;
+}
+
+/**
  * GlobalSearch — search trigger button + fullscreen overlay.
  *
  * The trigger button is compact enough to live inside a nav column. Clicking
@@ -39,6 +71,7 @@ export interface SearchResultGroup {
  * result fetching — GlobalSearch is purely presentational.
  *
  * @example
+ * // Basic usage
  * const [open, setOpen]   = useState(false);
  * const [query, setQuery] = useState("");
  * const results           = useSearch(query);   // your hook
@@ -51,6 +84,46 @@ export interface SearchResultGroup {
  *   onQueryChange={setQuery}
  *   results={results}
  *   onSelect={result => { navigate(`/datasets/${result.id}`); setOpen(false); }}
+ * />
+ *
+ * @example
+ * // TanStack Router — result rows as Links (onSelect not needed)
+ * import { Link } from "@tanstack/react-router";
+ *
+ * const results = [{ label: "Datasets", results: [
+ *   { id: "DS-001", title: "MobiScout", icon: "▣", to: "/datasets/DS-001" },
+ * ]}];
+ *
+ * <GlobalSearch
+ *   open={open} onOpen={...} onClose={...}
+ *   query={query} onQueryChange={setQuery}
+ *   results={results}
+ *   linkComponent={Link}
+ * />
+ *
+ * @example
+ * // TanStack Form — custom input via renderInput
+ * import { useForm } from "@tanstack/react-form";
+ *
+ * const form = useForm({ defaultValues: { q: "" } });
+ *
+ * <GlobalSearch
+ *   open={open} onOpen={...} onClose={...}
+ *   query={form.state.values.q}
+ *   onQueryChange={v => form.setFieldValue("q", v)}
+ *   results={results}
+ *   onSelect={r => navigate(r.to ?? "/")}
+ *   renderInput={props => (
+ *     <form.Field name="q">
+ *       {field => (
+ *         <input
+ *           {...props}
+ *           value={field.state.value}
+ *           onChange={e => field.handleChange(e.target.value)}
+ *         />
+ *       )}
+ *     </form.Field>
+ *   )}
  * />
  */
 export interface GlobalSearchProps {
@@ -66,8 +139,12 @@ export interface GlobalSearchProps {
   onQueryChange: (query: string) => void;
   /** Grouped result sets. Pass an empty array while loading or when idle. */
   results: SearchResultGroup[];
-  /** Called when the user selects a result row. */
-  onSelect: (result: SearchResult) => void;
+  /**
+   * Called when the user selects a result row rendered as a button.
+   * Optional when all result rows use `linkComponent` + `result.to` for
+   * navigation — in that case the router handles the transition.
+   */
+  onSelect?: (result: SearchResult) => void;
   /**
    * Placeholder shown in both the trigger button and the search input.
    * @default "Search…"
@@ -79,6 +156,41 @@ export interface GlobalSearchProps {
    * @default false
    */
   loading?: boolean;
+  /**
+   * Router Link component used to render result rows that carry a `to` field.
+   * Pass the Link component from your router (e.g. TanStack Router's `Link`)
+   * so the overlay integrates with your router without hard-coding it.
+   *
+   * When omitted, all result rows render as `<button>` elements and navigation
+   * is handled by the `onSelect` callback.
+   *
+   * @example
+   * import { Link } from "@tanstack/react-router";
+   * <GlobalSearch linkComponent={Link} ... />
+   */
+  linkComponent?: React.ElementType;
+  /**
+   * Render prop for the search input element.
+   *
+   * When provided, GlobalSearch calls this instead of rendering its built-in
+   * `<input>`. The function receives all default input props via
+   * `SearchInputProps`; spread them onto your custom element so query binding
+   * and auto-focus are preserved.
+   *
+   * @example
+   * renderInput={props => (
+   *   <form.Field name="q">
+   *     {field => (
+   *       <input
+   *         {...props}
+   *         value={field.state.value}
+   *         onChange={e => field.handleChange(e.target.value)}
+   *       />
+   *     )}
+   *   </form.Field>
+   * )}
+   */
+  renderInput?: (props: SearchInputProps) => React.ReactNode;
 }
 
 export function GlobalSearch({
@@ -91,6 +203,8 @@ export function GlobalSearch({
   onSelect,
   placeholder = "Search…",
   loading = false,
+  linkComponent,
+  renderInput,
 }: GlobalSearchProps): React.ReactElement {
   const inputRef   = useRef<HTMLInputElement>(null);
   const isMac      = typeof navigator !== "undefined" &&
@@ -130,9 +244,17 @@ export function GlobalSearch({
   }, [open]);
 
   function handleSelect(result: SearchResult): void {
-    onSelect(result);
+    onSelect?.(result);
     onClose();
   }
+
+  const rowClassName = [
+    "w-full flex items-center gap-3 px-4 py-2.5 text-left",
+    "border-b border-odm-line-l border-0",
+    "bg-transparent cursor-pointer",
+    "hover:bg-odm-card transition-colors duration-75",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
+  ].join(" ");
 
   return (
     <>
@@ -188,14 +310,26 @@ export function GlobalSearch({
               className="flex items-center gap-3 px-4 py-3 border-b-[3px] border-b-lux-red flex-shrink-0"
             >
               <span aria-hidden="true" className="text-[18px] text-odm-muted flex-shrink-0 leading-none">⌕</span>
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={e => onQueryChange(e.target.value)}
-                aria-label="Search"
-                placeholder={placeholder}
-                className="flex-1 min-w-0 font-sans text-[15px] text-odm-ink bg-transparent border-0 outline-none placeholder:text-odm-faint"
-              />
+              {renderInput
+                ? renderInput({
+                    ref: inputRef,
+                    value: query,
+                    onChange: e => onQueryChange(e.target.value),
+                    placeholder,
+                    "aria-label": "Search",
+                    className: "flex-1 min-w-0 font-sans text-[15px] text-odm-ink bg-transparent border-0 outline-none placeholder:text-odm-faint",
+                  })
+                : (
+                  <input
+                    ref={inputRef}
+                    value={query}
+                    onChange={e => onQueryChange(e.target.value)}
+                    aria-label="Search"
+                    placeholder={placeholder}
+                    className="flex-1 min-w-0 font-sans text-[15px] text-odm-ink bg-transparent border-0 outline-none placeholder:text-odm-faint"
+                  />
+                )
+              }
               {loading && <Spinner size="sm" />}
               {query && !loading && (
                 <button
@@ -250,38 +384,54 @@ export function GlobalSearch({
                   <div className="px-4 py-2 font-sans text-[10px] font-bold tracking-[0.12em] uppercase text-odm-muted bg-odm-surface border-b border-odm-line-l">
                     {group.label} · {group.results.length}
                   </div>
-                  {group.results.map(result => (
-                    <button
-                      key={result.id}
-                      onClick={() => handleSelect(result)}
-                      className={[
-                        "w-full flex items-center gap-3 px-4 py-2.5 text-left",
-                        "border-b border-odm-line-l border-0",
-                        "bg-transparent cursor-pointer",
-                        "hover:bg-odm-card transition-colors duration-75",
-                        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
-                      ].join(" ")}
-                    >
-                      {result.icon && (
-                        <span aria-hidden="true" className="text-odm-faint text-sm flex-shrink-0 w-4 text-center leading-none">
-                          {result.icon}
-                        </span>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-sans text-[14px] font-semibold text-odm-ink truncate">
-                          {result.title}
-                        </div>
-                        {result.subtitle && (
-                          <div className="font-sans text-xs text-odm-muted truncate mt-0.5">
-                            {result.subtitle}
-                          </div>
+                  {group.results.map(result => {
+                    const rowContent = (
+                      <>
+                        {result.icon && (
+                          <span aria-hidden="true" className="text-odm-faint text-sm flex-shrink-0 w-4 text-center leading-none">
+                            {result.icon}
+                          </span>
                         )}
-                      </div>
-                      <span className="font-mono text-[11px] text-odm-faint flex-shrink-0">
-                        {result.id}
-                      </span>
-                    </button>
-                  ))}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-sans text-[14px] font-semibold text-odm-ink truncate">
+                            {result.title}
+                          </div>
+                          {result.subtitle && (
+                            <div className="font-sans text-xs text-odm-muted truncate mt-0.5">
+                              {result.subtitle}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-mono text-[11px] text-odm-faint flex-shrink-0">
+                          {result.id}
+                        </span>
+                      </>
+                    );
+
+                    if (linkComponent && result.to) {
+                      const LinkComponent = linkComponent;
+                      return (
+                        <LinkComponent
+                          key={result.id}
+                          to={result.to}
+                          onClick={onClose}
+                          className={rowClassName}
+                        >
+                          {rowContent}
+                        </LinkComponent>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={result.id}
+                        onClick={() => handleSelect(result)}
+                        className={rowClassName}
+                      >
+                        {rowContent}
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
             </div>

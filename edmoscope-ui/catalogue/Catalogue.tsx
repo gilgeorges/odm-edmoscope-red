@@ -154,6 +154,44 @@ function GlobalSearchDemo(): React.ReactElement {
   );
 }
 
+function GlobalSearchLinkDemo(): React.ReactElement {
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState("");
+
+  // Simulate a router Link for the catalogue preview (no real router here).
+  // In a real app, pass Link from @tanstack/react-router instead.
+  const MockLink = React.forwardRef<
+    HTMLAnchorElement,
+    React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }
+  >(({ to, children, ...rest }, ref) => (
+    <a ref={ref} href={to} {...rest}>{children}</a>
+  ));
+  MockLink.displayName = "MockLink";
+
+  const DEMO_RESULTS = query.length >= 2 ? [
+    { label: "Datasets · 2", results: [
+      { id: "DS-001", title: "MobiScout Count Data", subtitle: "MobiScout AG · Source", icon: "▣", to: "/datasets/DS-001" },
+      { id: "DS-002", title: "SEBES Traffic Counts", subtitle: "SEBES · Source",        icon: "▣", to: "/datasets/DS-002" },
+    ]},
+    { label: "Actors · 1", results: [
+      { id: "AC-007", title: "Julie Schmit", subtitle: "Data steward", icon: "◎", to: "/actors/AC-007" },
+    ]},
+  ] : [];
+
+  return (
+    <GlobalSearch
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => { setOpen(false); setQuery(""); }}
+      query={query}
+      onQueryChange={setQuery}
+      results={DEMO_RESULTS}
+      linkComponent={MockLink}
+      placeholder="Search datasets, actors…"
+    />
+  );
+}
+
 function ToastDemo(): React.ReactElement {
   const { toast } = useToast();
   return (
@@ -1038,6 +1076,68 @@ const [query, setQuery] = useState("");
   onSelect={r => console.log(r)}
 />`}
           >
+            <GlobalSearchDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Result rows as router Links (linkComponent + result.to)"
+            code={`import { Link } from "@tanstack/react-router";
+
+// Compute result.to when building results — e.g. from id and type:
+const results = [
+  { label: "Datasets · 2", results: [
+    { id: "DS-001", title: "MobiScout Count Data", icon: "▣", to: "/datasets/DS-001" },
+    { id: "DS-002", title: "SEBES Traffic Counts", icon: "▣", to: "/datasets/DS-002" },
+  ]},
+  { label: "Actors · 1", results: [
+    { id: "AC-007", title: "Julie Schmit", icon: "◎", to: "/actors/AC-007" },
+  ]},
+];
+
+// onSelect is optional — the router handles navigation via the Link href.
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); setQuery(""); }}
+  query={query}
+  onQueryChange={setQuery}
+  results={results}
+  linkComponent={Link}
+/>`}
+          >
+            <GlobalSearchLinkDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Custom input via renderInput (TanStack Form field)"
+            code={`import { useForm } from "@tanstack/react-form";
+
+const form = useForm({ defaultValues: { q: "" } });
+
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); form.setFieldValue("q", ""); }}
+  query={form.state.values.q}
+  onQueryChange={v => form.setFieldValue("q", v)}
+  results={results}
+  linkComponent={Link}
+  renderInput={props => (
+    <form.Field name="q">
+      {field => (
+        <input
+          {...props}
+          value={field.state.value}
+          onChange={e => field.handleChange(e.target.value)}
+        />
+      )}
+    </form.Field>
+  )}
+/>`}
+          >
+            {/* Live preview uses the standard demo — TanStack Form is not
+                a catalogue dependency. The code snippet above shows the real
+                wiring for a consuming app. */}
             <GlobalSearchDemo />
           </CatalogueExample>
         </CatalogueSection>
