@@ -128,6 +128,18 @@ function CatalogueExample({ label, code, children, bg = "white" }: {
 /* ─────────────────────────────────────────────────────────────────────────────
    Toast trigger helper (needs to be inside ToastProvider)
 ───────────────────────────────────────────────────────────────────────────── */
+
+// Defined at module level so its reference is stable across renders.
+// Defining forwardRef components inside a render function creates a new
+// component type on every render, causing React to unmount/remount rows.
+const MockLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }
+>(({ to, children, ...rest }, ref) => (
+  <a ref={ref} href={to} {...rest}>{children}</a>
+));
+MockLink.displayName = "MockLink";
+
 function GlobalSearchDemo(): React.ReactElement {
   const [open, setOpen]   = useState(false);
   const [query, setQuery] = useState("");
@@ -157,16 +169,7 @@ function GlobalSearchDemo(): React.ReactElement {
 function GlobalSearchLinkDemo(): React.ReactElement {
   const [open, setOpen]   = useState(false);
   const [query, setQuery] = useState("");
-
-  // Simulate a router Link for the catalogue preview (no real router here).
-  // In a real app, pass Link from @tanstack/react-router instead.
-  const MockLink = React.forwardRef<
-    HTMLAnchorElement,
-    React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }
-  >(({ to, children, ...rest }, ref) => (
-    <a ref={ref} href={to} {...rest}>{children}</a>
-  ));
-  MockLink.displayName = "MockLink";
+  // MockLink is defined at module level (stable reference).
 
   const DEMO_RESULTS = query.length >= 2 ? [
     { label: "Datasets · 2", results: [
@@ -193,8 +196,8 @@ function GlobalSearchLinkDemo(): React.ReactElement {
 }
 
 function GlobalSearchActionsDemo(): React.ReactElement {
-  const [open, setOpen]   = React.useState(false);
-  const [query, setQuery] = React.useState("");
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState("");
 
   const DEMO_RESULTS = query.length >= 2 ? [
     { label: "Datasets · 2", results: [
@@ -1167,10 +1170,10 @@ const form = useForm({ defaultValues: { q: "" } });
   )}
 />`}
           >
-            {/* Live preview uses the standard demo — TanStack Form is not
-                a catalogue dependency. The code snippet above shows the real
+            {/* Live preview reuses the actions demo — TanStack Form is not
+                a catalogue dependency. The code snippet shows the real
                 wiring for a consuming app. */}
-            <GlobalSearchDemo />
+            <GlobalSearchActionsDemo />
           </CatalogueExample>
 
           <CatalogueExample
