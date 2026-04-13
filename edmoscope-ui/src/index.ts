@@ -110,6 +110,12 @@ export type { CardSelectProps, CardSelectMultiProps, CardSelectOption } from "./
 export { FileUpload }             from "./forms/FileUpload.tsx";
 export type { FileUploadProps, UploadEntry, UploadStatus } from "./forms/FileUpload.tsx";
 
+export { DependencySearchInput }  from "./forms/DependencySearchInput.tsx";
+export type { DependencySearchInputProps, DataAssetOption, AssetType } from "./forms/DependencySearchInput.tsx";
+
+export { DependencyList }         from "./forms/DependencyList.tsx";
+export type { DependencyListProps } from "./forms/DependencyList.tsx";
+
 // ── Data display ──────────────────────────────────────────────────────────────
 export { DataTable }              from "./data/DataTable.tsx";
 export type { DataTableProps, ColumnDef } from "./data/DataTable.tsx";
