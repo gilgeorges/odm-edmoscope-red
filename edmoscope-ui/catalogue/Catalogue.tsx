@@ -27,6 +27,7 @@ import {
   EmptyState, ErrorBoundary, ToastProvider, useToast, Notice,
   // Forms
   Input, Textarea, Select, SearchBox, FilterBar, Combobox, CardSelect, FileUpload,
+  DependencySearchInput, DependencyList,
   // Navigation (Tabs)
   Tabs,
   // Data
@@ -37,7 +38,7 @@ import {
   Modal, Drawer, ConfirmDialog,
 } from "../src/index.ts";
 
-import type { ColumnDef, FilterDefinition, UploadEntry } from "../src/index.ts";
+import type { ColumnDef, FilterDefinition, UploadEntry, DataAssetOption } from "../src/index.ts";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Catalogue shell components
@@ -697,6 +698,49 @@ function FileUploadDemo({ shouldFail = false }: { shouldFail?: boolean }): React
       onRemove={handleRemove}
     />
   );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Dependency search / list demo helpers
+───────────────────────────────────────────────────────────────────────────── */
+
+const DEPENDENCY_ASSETS: DataAssetOption[] = [
+  { id: "DS-001", name: "MobiScout Count Data",          source: "MobiScout AG",    assetType: "dataset", tier: "gold",   updatedAt: "2025-10-01" },
+  { id: "DS-002", name: "NPVM Demand Matrix",            source: "ARE",             assetType: "dataset", tier: "silver", updatedAt: "2025-08-14" },
+  { id: "DS-003", name: "Park & Ride Occupancy",         source: "Ville de Lux.",   assetType: "dataset", tier: "bronze", updatedAt: "2025-09-22" },
+  { id: "DS-004", name: "SEBES Traffic Counts",          source: "SEBES",           assetType: "dataset", tier: "silver", updatedAt: "2025-11-01" },
+  { id: "DS-005", name: "RGTR Bus Ridership",            source: "RGTR",            assetType: "dataset", tier: "bronze", updatedAt: "2025-07-30" },
+  { id: "DS-006", name: "Occupation — Morning peak",     source: "STATEC",          assetType: "dataset", tier: "gold",   updatedAt: "2025-10-15" },
+  { id: "QR-001", name: "Modal split by corridor",       source: "OdM",             assetType: "query",   tier: "gold",   updatedAt: "2025-09-01" },
+  { id: "QR-002", name: "Evening peak aggregation",      source: "OdM",             assetType: "query",   tier: "silver", updatedAt: "2025-08-20" },
+  { id: "QR-003", name: "Intermodal transfer counts",    source: "OdM",             assetType: "query",                   updatedAt: "2025-06-11" },
+  { id: "AC-001", name: "Julie Schmit",                  source: "OdM",             assetType: "actor" },
+  { id: "AC-002", name: "Thomas Braun",                  source: "STATEC",          assetType: "actor" },
+  { id: "AC-003", name: "Mobility Analytics Unit",       source: "ARE",             assetType: "actor" },
+];
+
+function DependencySearchDemo(): React.ReactElement {
+  const [deps, setDeps] = useState<DataAssetOption[]>([]);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <DependencySearchInput
+        assets={DEPENDENCY_ASSETS}
+        selectedIds={deps.map((d) => d.id)}
+        onSelect={(asset) => setDeps((prev) => [...prev, asset])}
+        placeholder="Search datasets and queries…"
+      />
+      <DependencyList items={deps} onChange={setDeps} />
+    </div>
+  );
+}
+
+function DependencyListDemo(): React.ReactElement {
+  const [deps, setDeps] = useState<DataAssetOption[]>([
+    DEPENDENCY_ASSETS[0],
+    DEPENDENCY_ASSETS[3],
+    DEPENDENCY_ASSETS[6],
+  ]);
+  return <DependencyList items={deps} onChange={setDeps} />;
 }
 
 export default function Catalogue(): React.ReactElement {
@@ -1600,6 +1644,64 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
             <div style={{ maxWidth: 520 }}>
               <FileUploadDemo />
             </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── DependencySearchInput ────────────────────────────────────── */}
+        <CatalogueSection title="DependencySearchInput">
+          <CatalogueExample
+            label="Interactive — with inline filter strip and DependencyList"
+            bg="#EFEFED"
+            code={`<DependencySearchInput
+  assets={allAssets}
+  selectedIds={deps.map(d => d.id)}
+  onSelect={asset => setDeps(prev => [...prev, asset])}
+  placeholder="Search datasets and queries…"
+/>
+<DependencyList
+  items={deps}
+  onChange={setDeps}
+/>`}
+          >
+            <DependencySearchDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="pageSize={4} — footer shows 'Showing 4 of N'"
+            bg="#EFEFED"
+            code={`<DependencySearchInput
+  assets={allAssets}
+  pageSize={4}
+  onSelect={() => {}}
+/>`}
+          >
+            <DependencySearchInput
+              assets={DEPENDENCY_ASSETS}
+              pageSize={4}
+              onSelect={() => {}}
+            />
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── DependencyList ────────────────────────────────────────────── */}
+        <CatalogueSection title="DependencyList">
+          <CatalogueExample
+            label="Populated list — drag ☰ to reorder, × to remove"
+            bg="#EFEFED"
+            code={`<DependencyList
+  items={deps}
+  onChange={setDeps}
+/>`}
+          >
+            <DependencyListDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Empty state"
+            bg="#EFEFED"
+            code={`<DependencyList items={[]} onChange={() => {}} />`}
+          >
+            <DependencyList items={[]} onChange={() => {}} />
           </CatalogueExample>
         </CatalogueSection>
 
