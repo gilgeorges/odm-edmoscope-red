@@ -132,10 +132,10 @@ const STATE_BADGE: Record<
   RetentionStatus,
   { bg: string; border: string; text: string; label: string }
 > = {
-  draft:     { bg: "bg-odm-warn-bg",  border: "border-odm-warn-bd", text: "text-odm-warn",  label: "Draft" },
-  published: { bg: "bg-odm-ok-bg",    border: "border-odm-ok-bd",   text: "text-odm-ok",    label: "Published" },
-  permanent: { bg: "bg-odm-info-bg",  border: "border-odm-info-bd", text: "text-odm-info",  label: "Permanent" },
-  archived:  { bg: "bg-odm-surface",  border: "border-odm-line-l",  text: "text-odm-muted", label: "Archived" },
+  draft: { bg: "bg-odm-warn-bg", border: "border-odm-warn-bd", text: "text-odm-warn", label: "Draft" },
+  published: { bg: "bg-odm-ok-bg", border: "border-odm-ok-bd", text: "text-odm-ok", label: "Published" },
+  permanent: { bg: "bg-odm-info-bg", border: "border-odm-info-bd", text: "text-odm-info", label: "Permanent" },
+  archived: { bg: "bg-odm-surface", border: "border-odm-line-l", text: "text-odm-muted", label: "Archived" },
 };
 
 /** Small toolbar button used inside the drawer. */
@@ -264,12 +264,12 @@ export function SqlWorkbench({
     typeof window !== "undefined" ? window.innerHeight : 600;
   const partialH: Record<"collapsed" | "half", number> = {
     collapsed: 36,
-    half:      Math.min(300, Math.floor(windowH * 0.35)),
+    half: Math.min(300, Math.floor(windowH * 0.35)),
   };
   const h = drawerState === "full" ? windowH : partialH[drawerState as "collapsed" | "half"] ?? 36;
 
   /* ── Split heights in full mode ─────────────────────────────────────── */
-  const editorH  = drawerState === "full" ? Math.floor(windowH * 0.4) : h - 36;
+  const editorH = drawerState === "full" ? Math.floor(windowH * 0.4) : h - 36;
   const resultsH = drawerState === "full" ? h - editorH - 36 - 1 : 0;
 
   /* ── Actions ────────────────────────────────────────────────────────── */
@@ -278,8 +278,8 @@ export function SqlWorkbench({
   const queryName = activeQuery
     ? activeQuery.title + (isDirty ? " *" : "")
     : sql.trim().length > 3
-    ? "Unsaved query"
-    : "SQL Workbench";
+      ? "Unsaved query"
+      : "SQL Workbench";
 
   function handleRun(): void {
     setHasResults(true);
@@ -290,7 +290,7 @@ export function SqlWorkbench({
   function handleSave(): void {
     const now = new Date();
     if (activeQuery) {
-      onUpdate?.({ ...activeQuery, sql, updated_at: now, revision: activeQuery.revision + 1 });
+      onUpdate?.({ ...activeQuery, sql, updated_at: now, revision: activeQuery.revision });
     } else {
       onCreate?.({ id: `Q-${Date.now()}`, title: "Untitled query", sql, state: "draft", created_at: now, updated_at: now, revision: 1 });
     }
@@ -351,8 +351,8 @@ export function SqlWorkbench({
           initializing
             ? "SQL Workbench loading"
             : drawerState === "collapsed"
-            ? "Open SQL Workbench"
-            : "Collapse SQL Workbench"
+              ? "Open SQL Workbench"
+              : "Collapse SQL Workbench"
         }
       >
         {/* Left: label + name + state badge + dataset link */}
