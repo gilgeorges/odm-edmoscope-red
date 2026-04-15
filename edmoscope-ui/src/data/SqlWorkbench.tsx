@@ -257,26 +257,21 @@ export function SqlWorkbench({
   }
 
   function handleSave(): void {
-    const now = new Date().toISOString().slice(0, 10);
-    const saved: SavedQuery = activeQuery
-      ? {
-          ...activeQuery,
-          name: saveName || activeQuery.name,
-          description: saveDesc || activeQuery.description,
-          sql,
-          state: "saved",
-        }
-      : {
-          id: `Q-${Date.now()}`,
-          name: saveName || "Untitled query",
-          description: saveDesc,
-          sql,
-          state: "saved",
-          // updated is not a required field but consumers may extend the type
-          ...({} as Record<string, string>),
-          updated: now,
-        };
-    onSave?.(saved);
+    const record: SavedQuery = activeQuery
+      ? { ...activeQuery, sql }
+      : { id: `Q-${Date.now()}`, name: "Untitled query", sql, state: "draft" };
+    onSave?.(record);
+  }
+
+  function handleFork(): void {
+    const forked: SavedQuery = {
+      id: `Q-${Date.now()}`,
+      name: saveName || (activeQuery ? `${activeQuery.name} (fork)` : "Untitled query"),
+      description: saveDesc || activeQuery?.description || "",
+      sql,
+      state: "saved",
+    };
+    onSave?.(forked);
     setShowSaveForm(false);
     setSaveName("");
     setSaveDesc("");
@@ -370,18 +365,14 @@ export function SqlWorkbench({
                   + New
                 </DrawerBtn>
               </Tooltip>
-              <Tooltip
-                text={
-                  activeQuery?.state === "saved" || activeQuery?.state === "implemented"
-                    ? "Save a copy of this query"
-                    : "Save this query"
-                }
-                placement="top"
-              >
+              <Tooltip text="Save changes to this query" placement="top">
+                <DrawerBtn onClick={handleSave}>
+                  Save
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Fork into a new named query" placement="top">
                 <DrawerBtn onClick={() => setShowSaveForm((s) => !s)}>
-                  {activeQuery?.state === "saved" || activeQuery?.state === "implemented"
-                    ? "Fork & save"
-                    : "Save"}
+                  Fork
                 </DrawerBtn>
               </Tooltip>
               <Tooltip text="Execute the query" placement="top">
@@ -448,8 +439,8 @@ export function SqlWorkbench({
                   "focus:border-b-lux-red transition-colors duration-100",
                 ].join(" ")}
               />
-              <Tooltip text="Confirm and save" placement="top">
-                <DrawerBtn primary onClick={handleSave}>Save</DrawerBtn>
+              <Tooltip text="Create fork" placement="top">
+                <DrawerBtn primary onClick={handleFork}>Fork</DrawerBtn>
               </Tooltip>
               <Tooltip text="Discard and close" placement="top">
                 <DrawerBtn onClick={() => setShowSaveForm(false)}>Cancel</DrawerBtn>
