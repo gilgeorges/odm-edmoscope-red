@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Tooltip } from "../primitives/Tooltip";
 import { Spinner } from "../primitives/Spinner";
+import { SqlEditor } from "./SqlEditor";
 
 /** Visual state of the SQL drawer. */
 export type DrawerState = "collapsed" | "half" | "full";
@@ -449,19 +450,11 @@ export function SqlWorkbench({
           )}
 
           {/* SQL editor */}
-          <textarea
+          <SqlEditor
             value={sql}
-            onChange={(e) => setSql(e.target.value)}
-            spellCheck={false}
-            aria-label="SQL query editor"
-            placeholder="-- Start writing SQL"
-            className={[
-              "block w-full font-mono text-[13px] text-odm-ink leading-[1.9]",
-              "bg-odm-page border-0 border-b border-odm-line",
-              "px-4 py-3.5 outline-none resize-none box-border shrink-0",
-              "focus:outline-none",
-            ].join(" ")}
-            style={{ height: editorH }}
+            onChange={setSql}
+            height={editorH}
+            ariaLabel="SQL query editor"
           />
 
           {/* Results — full mode only */}

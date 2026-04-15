@@ -3,23 +3,35 @@
   "version": "0.1.0",
   "description": "EDMoScope UI component library — Observatoire digital de la Mobilité",
   "type": "module",
-  "files": ["src", "tokens.ts", "tailwind.config.ts"],
+  "files": [
+    "src",
+    "tokens.ts",
+    "tailwind.config.ts"
+  ],
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.5.0",
+    "@vitejs/plugin-react": "^4.0.0",
     "tailwindcss": "^4.0.0",
-    "@tailwindcss/vite": "^4.0.0",
-    "vite": "^6.0.0",
-    "@vitejs/plugin-react": "^4.0.0"
+    "typescript": "^5.5.0",
+    "vite": "^6.0.0"
   },
   "scripts": {
     "catalogue": "vite",
     "build:catalogue": "vite build"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.1",
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.41.0"
   }
 }
