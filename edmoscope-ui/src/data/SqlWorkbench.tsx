@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Tooltip } from "../primitives/Tooltip";
+import { Spinner } from "../primitives/Spinner";
 
 /** Visual state of the SQL drawer. */
 export type DrawerState = "collapsed" | "half" | "full";
@@ -75,6 +76,14 @@ export interface SqlWorkbenchProps {
    * When undefined, the results area is hidden.
    */
   resultRows?: ResultRow[];
+  /**
+   * When true the workbench is shown but fully disabled while the SQL engine
+   * (e.g. DuckDB) is initialising. The tab strip displays a spinner and
+   * "Loading SQL playground…" instead of the query name, and all controls are
+   * hidden. Once false the workbench becomes interactive as normal.
+   * @default false
+   */
+  initializing?: boolean;
   /**
    * When true a loading message is shown instead of results.
    * @default false
@@ -190,6 +199,7 @@ export function SqlWorkbench({
   onNavigateDataset,
   linkedDatasetId,
   resultRows,
+  initializing = false,
   loading = false,
   error,
   className = "",
@@ -273,6 +283,7 @@ export function SqlWorkbench({
   }
 
   function handleToggle(): void {
+    if (initializing) return;
     setDrawerState((s) => (s === "collapsed" ? expandedState : "collapsed"));
   }
 
@@ -297,34 +308,53 @@ export function SqlWorkbench({
       <div
         className={[
           "h-9 shrink-0 flex items-center justify-between px-4",
-          "bg-odm-surface cursor-pointer select-none",
+          "bg-odm-surface select-none",
+          initializing ? "cursor-default" : "cursor-pointer",
           drawerState !== "collapsed" ? "border-b border-odm-line" : "",
         ].join(" ")}
         onClick={handleToggle}
-        role="button"
-        aria-expanded={drawerState !== "collapsed"}
-        aria-label={drawerState === "collapsed" ? "Open SQL Workbench" : "Collapse SQL Workbench"}
+        role={initializing ? undefined : "button"}
+        aria-busy={initializing}
+        aria-expanded={initializing ? undefined : drawerState !== "collapsed"}
+        aria-label={
+          initializing
+            ? "SQL Workbench loading"
+            : drawerState === "collapsed"
+            ? "Open SQL Workbench"
+            : "Collapse SQL Workbench"
+        }
       >
         {/* Left: label + name + state badge + dataset link */}
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           <span className="font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-lux-red shrink-0">
             SQL
           </span>
-          <span className="font-mono text-[12px] text-odm-mid truncate">
-            {queryName}
-          </span>
-          {activeQuery && <StateBadge state={activeQuery.state} />}
-          {linkedDatasetId && drawerState !== "collapsed" && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onNavigateDataset?.(linkedDatasetId);
-              }}
-              className="font-sans text-[11px] text-odm-muted underline cursor-pointer bg-transparent border-0 p-0 shrink-0 hover:text-odm-mid"
-            >
-              View {linkedDatasetId} →
-            </button>
+          {initializing ? (
+            <>
+              <Spinner size="sm" label="Loading SQL playground…" />
+              <span className="font-mono text-[12px] text-odm-muted truncate">
+                Loading SQL playground…
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono text-[12px] text-odm-mid truncate">
+                {queryName}
+              </span>
+              {activeQuery && <StateBadge state={activeQuery.state} />}
+              {linkedDatasetId && drawerState !== "collapsed" && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigateDataset?.(linkedDatasetId);
+                  }}
+                  className="font-sans text-[11px] text-odm-muted underline cursor-pointer bg-transparent border-0 p-0 shrink-0 hover:text-odm-mid"
+                >
+                  View {linkedDatasetId} →
+                </button>
+              )}
+            </>
           )}
         </div>
 
@@ -333,7 +363,7 @@ export function SqlWorkbench({
           className="flex items-center gap-1.5 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          {drawerState !== "collapsed" && (
+          {!initializing && drawerState !== "collapsed" && (
             <>
               <Tooltip text="New scratch buffer" placement="top">
                 <DrawerBtn onClick={() => { onNew?.(); setSql("-- New query\n"); setHasResults(false); setDrawerState("half"); }}>
@@ -375,14 +405,16 @@ export function SqlWorkbench({
               </Tooltip>
             </>
           )}
-          <Tooltip
-            text={drawerState === "collapsed" ? "Open workbench" : "Collapse workbench"}
-            placement="top"
-          >
-            <DrawerBtn onClick={handleToggle}>
-              {drawerState === "collapsed" ? "▲" : "▼"}
-            </DrawerBtn>
-          </Tooltip>
+          {!initializing && (
+            <Tooltip
+              text={drawerState === "collapsed" ? "Open workbench" : "Collapse workbench"}
+              placement="top"
+            >
+              <DrawerBtn onClick={handleToggle}>
+                {drawerState === "collapsed" ? "▲" : "▼"}
+              </DrawerBtn>
+            </Tooltip>
+          )}
         </div>
       </div>
 
