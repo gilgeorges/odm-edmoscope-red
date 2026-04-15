@@ -68,10 +68,17 @@ export interface SqlWorkbenchProps {
    */
   onRun?: (sql: string) => void;
   /**
-   * Called when the user saves changes to the current snippet (not a fork).
+   * Called when the user saves changes to an existing snippet.
    * Receives the updated snippet object with an incremented revision.
+   * Only fired when `activeQuery` is set.
    */
-  onSave?: (query: SqlSnippet) => void;
+  onUpdate?: (query: SqlSnippet) => void;
+  /**
+   * Called when the user saves a new (unsaved) scratch buffer for the first time.
+   * Receives the new snippet object with `revision` 1 and state `"draft"`.
+   * Only fired when there is no `activeQuery`.
+   */
+  onCreate?: (query: SqlSnippet) => void;
   /**
    * Called when the user confirms a fork via the Fork form.
    * Receives the new snippet object with `derived_from` set to the source
@@ -203,8 +210,9 @@ function StateBadge({ state }: { state: RetentionStatus }): React.ReactElement {
  * <SqlWorkbench
  *   activeQuery={currentQuery}
  *   onRun={sql => executeSql(sql)}
- *   onSave={q => saveQuery(q)}
- *   onFork={q => saveQuery(q)}
+ *   onUpdate={q => updateQuery(q)}
+ *   onCreate={q => createQuery(q)}
+ *   onFork={q => createQuery(q)}
  *   onNew={() => setCurrentQuery(null)}
  *   resultRows={results}
  *   loading={isRunning}
@@ -216,7 +224,8 @@ export function SqlWorkbench({
   defaultState = "collapsed",
   activeQuery = null,
   onRun,
-  onSave,
+  onUpdate,
+  onCreate,
   onFork,
   onNew,
   onNavigateDataset,
@@ -280,10 +289,11 @@ export function SqlWorkbench({
 
   function handleSave(): void {
     const now = new Date();
-    const record: SqlSnippet = activeQuery
-      ? { ...activeQuery, sql, updated_at: now, revision: activeQuery.revision + 1 }
-      : { id: `Q-${Date.now()}`, title: "Untitled query", sql, state: "draft", created_at: now, updated_at: now, revision: 1 };
-    onSave?.(record);
+    if (activeQuery) {
+      onUpdate?.({ ...activeQuery, sql, updated_at: now, revision: activeQuery.revision + 1 });
+    } else {
+      onCreate?.({ id: `Q-${Date.now()}`, title: "Untitled query", sql, state: "draft", created_at: now, updated_at: now, revision: 1 });
+    }
   }
 
   function handleFork(): void {
