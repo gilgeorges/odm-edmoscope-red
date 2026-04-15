@@ -130,7 +130,7 @@ export { TierBadge }              from "./data/TierBadge.tsx";
 export type { TierBadgeProps }    from "./data/TierBadge.tsx";
 
 export { SqlWorkbench }           from "./data/SqlWorkbench.tsx";
-export type { SqlWorkbenchProps, SavedQuery, ResultRow, DrawerState } from "./data/SqlWorkbench.tsx";
+export type { SqlWorkbenchProps, SqlSnippet, RetentionStatus, RetentionStatusFlags, SnippetOrder, ResultRow, DrawerState } from "./data/SqlWorkbench.tsx";
 
 // ── Cards ─────────────────────────────────────────────────────────────────────
 export { EntryCard }               from "./cards/EntryCard.tsx";

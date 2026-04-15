@@ -38,7 +38,7 @@ import {
   Modal, Drawer, ConfirmDialog,
 } from "../src/index.ts";
 
-import type { ColumnDef, FilterDefinition, UploadEntry, DataAssetOption } from "../src/index.ts";
+import type { ColumnDef, FilterDefinition, UploadEntry, DataAssetOption, SqlSnippet } from "../src/index.ts";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Catalogue shell components
@@ -296,12 +296,14 @@ function SqlWorkbenchSection(): React.ReactElement {
     }, 1200);
   }
 
-  const activeQuery = {
+  const activeQuery: SqlSnippet = {
     id: "Q-001",
-    name: "Top datasets by rows",
-    state: "saved" as const,
+    title: "Top datasets by rows",
+    state: "published",
     sql: "SELECT id, name, count, updated\nFROM datasets\nORDER BY count DESC\nLIMIT 20;",
-    description: "Lists all registered datasets ordered by row count.",
+    created_at: new Date("2026-03-01"),
+    updated_at: new Date("2026-03-28"),
+    revision: 3,
   };
 
   return (

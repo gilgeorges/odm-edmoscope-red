@@ -5,27 +5,42 @@ import { Spinner } from "../primitives/Spinner";
 /** Visual state of the SQL drawer. */
 export type DrawerState = "collapsed" | "half" | "full";
 
+/** Retention lifecycle state of a SQL snippet. */
+export type RetentionStatus = 'draft' | 'published' | 'permanent' | 'archived';
+
+/** Boolean flags for each retention status (e.g. for filter UI). */
+export type RetentionStatusFlags = { [K in RetentionStatus]: boolean };
+
+/** Sort order options for snippet lists. */
+export type SnippetOrder = "updated_at.desc" | "updated_at.asc" | "created_at.desc" | "title.asc";
+
 /**
- * SavedQuery — a query record shown in the tab strip and save form.
+ * SqlSnippet — a backend snippet record loaded into the SQL editor.
  */
-export interface SavedQuery {
-  /** Unique identifier (e.g. "Q-001"). */
+export type SqlSnippet = {
+  /** Unique identifier. */
   id: string;
-  /** Human-readable query name. */
-  name: string;
+  /** Human-readable query title. */
+  title: string;
   /**
-   * Query state controlling the badge colour.
-   * - `draft`       — unsaved, amber
-   * - `saved`       — saved, green
-   * - `implemented` — linked to a pipeline, blue
-   * - `archived`    — hidden by default, grey
+   * Lifecycle state controlling the badge colour.
+   * - `draft`     — work in progress, amber
+   * - `published` — saved and visible, green
+   * - `permanent` — linked to a pipeline, blue
+   * - `archived`  — hidden by default, grey
    */
-  state: "draft" | "saved" | "implemented" | "archived";
-  /** Initial SQL text. */
+  state: RetentionStatus;
+  /** The SQL text. */
   sql: string;
-  /** Optional description. */
-  description?: string;
-}
+  /** Creation timestamp. */
+  created_at: Date;
+  /** Last-update timestamp. */
+  updated_at: Date;
+  /** Revision counter, incremented on each save. */
+  revision: number;
+  /** ID of the snippet this was forked from, if any. */
+  derived_from?: string | null;
+};
 
 /**
  * ResultRow — a single row returned from a query execution.
@@ -43,20 +58,20 @@ export interface SqlWorkbenchProps {
    */
   defaultState?: DrawerState;
   /**
-   * The active query loaded into the editor, or null for an unsaved scratch
+   * The active snippet loaded into the editor, or null for an unsaved scratch
    * buffer. When this changes from outside the drawer syncs its SQL editor.
    */
-  activeQuery?: SavedQuery | null;
+  activeQuery?: SqlSnippet | null;
   /**
    * Called when the user clicks Run. Receives the current SQL string.
    * The drawer transitions to full automatically.
    */
   onRun?: (sql: string) => void;
   /**
-   * Called when the user saves a query (new or fork).
-   * Receives the updated query object.
+   * Called when the user saves a snippet (new or fork).
+   * Receives the updated snippet object.
    */
-  onSave?: (query: SavedQuery) => void;
+  onSave?: (query: SqlSnippet) => void;
   /**
    * Called when the user clicks "+ New" to start a fresh scratch buffer.
    */
@@ -101,13 +116,13 @@ export interface SqlWorkbenchProps {
 
 /* ── State badge colours ────────────────────────────────────────────────── */
 const STATE_BADGE: Record<
-  SavedQuery["state"],
+  RetentionStatus,
   { bg: string; border: string; text: string; label: string }
 > = {
-  draft:       { bg: "bg-odm-warn-bg",  border: "border-odm-warn-bd", text: "text-odm-warn",  label: "Draft" },
-  saved:       { bg: "bg-odm-ok-bg",    border: "border-odm-ok-bd",   text: "text-odm-ok",    label: "Saved" },
-  implemented: { bg: "bg-odm-info-bg",  border: "border-odm-info-bd", text: "text-odm-info",  label: "Implemented" },
-  archived:    { bg: "bg-odm-surface",  border: "border-odm-line-l",  text: "text-odm-muted", label: "Archived" },
+  draft:     { bg: "bg-odm-warn-bg",  border: "border-odm-warn-bd", text: "text-odm-warn",  label: "Draft" },
+  published: { bg: "bg-odm-ok-bg",    border: "border-odm-ok-bd",   text: "text-odm-ok",    label: "Published" },
+  permanent: { bg: "bg-odm-info-bg",  border: "border-odm-info-bd", text: "text-odm-info",  label: "Permanent" },
+  archived:  { bg: "bg-odm-surface",  border: "border-odm-line-l",  text: "text-odm-muted", label: "Archived" },
 };
 
 /** Small toolbar button used inside the drawer. */
@@ -144,7 +159,7 @@ function DrawerBtn({
 }
 
 /** Inline state badge shown in the tab strip. */
-function StateBadge({ state }: { state: SavedQuery["state"] }): React.ReactElement {
+function StateBadge({ state }: { state: RetentionStatus }): React.ReactElement {
   const s = STATE_BADGE[state];
   return (
     <span
@@ -215,7 +230,6 @@ export function SqlWorkbench({
   const [sql, setSql] = useState(activeQuery?.sql ?? "-- Start writing SQL\n");
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [saveName, setSaveName] = useState("");
-  const [saveDesc, setSaveDesc] = useState("");
   const [hasResults, setHasResults] = useState(false);
 
   /* Sync editor when active query changes from outside */
@@ -245,7 +259,7 @@ export function SqlWorkbench({
   const isDirty = activeQuery ? sql !== activeQuery.sql : sql.trim().length > 3;
 
   const queryName = activeQuery
-    ? activeQuery.name + (isDirty ? " *" : "")
+    ? activeQuery.title + (isDirty ? " *" : "")
     : sql.trim().length > 3
     ? "Unsaved query"
     : "SQL Workbench";
@@ -257,24 +271,28 @@ export function SqlWorkbench({
   }
 
   function handleSave(): void {
-    const record: SavedQuery = activeQuery
-      ? { ...activeQuery, sql }
-      : { id: `Q-${Date.now()}`, name: "Untitled query", sql, state: "draft" };
+    const now = new Date();
+    const record: SqlSnippet = activeQuery
+      ? { ...activeQuery, sql, updated_at: now, revision: activeQuery.revision + 1 }
+      : { id: `Q-${Date.now()}`, title: "Untitled query", sql, state: "draft", created_at: now, updated_at: now, revision: 1 };
     onSave?.(record);
   }
 
   function handleFork(): void {
-    const forked: SavedQuery = {
+    const now = new Date();
+    const forked: SqlSnippet = {
       id: `Q-${Date.now()}`,
-      name: saveName || (activeQuery ? `${activeQuery.name} (fork)` : "Untitled query"),
-      description: saveDesc || activeQuery?.description || "",
+      title: saveName || (activeQuery ? `${activeQuery.title} (fork)` : "Untitled query"),
       sql,
-      state: "saved",
+      state: "draft",
+      created_at: now,
+      updated_at: now,
+      revision: 1,
+      derived_from: activeQuery?.id ?? null,
     };
     onSave?.(forked);
     setShowSaveForm(false);
     setSaveName("");
-    setSaveDesc("");
   }
 
   function handleToggle(): void {
@@ -419,23 +437,11 @@ export function SqlWorkbench({
                 type="text"
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
-                placeholder="Query name…"
+                placeholder="Query title…"
                 className={[
                   "font-sans text-[13px] text-odm-ink bg-white",
                   "border border-odm-line border-b-2 border-b-odm-line-h",
                   "px-2.5 py-1 outline-none flex-[1_1_180px]",
-                  "focus:border-b-lux-red transition-colors duration-100",
-                ].join(" ")}
-              />
-              <input
-                type="text"
-                value={saveDesc}
-                onChange={(e) => setSaveDesc(e.target.value)}
-                placeholder="Description (optional)…"
-                className={[
-                  "font-sans text-[13px] text-odm-ink bg-white",
-                  "border border-odm-line border-b-2 border-b-odm-line-h",
-                  "px-2.5 py-1 outline-none flex-[2_1_240px]",
                   "focus:border-b-lux-red transition-colors duration-100",
                 ].join(" ")}
               />
