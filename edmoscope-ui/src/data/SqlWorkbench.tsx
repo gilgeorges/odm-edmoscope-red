@@ -194,6 +194,13 @@ export function SqlWorkbench({
   className = "",
 }: SqlWorkbenchProps): React.ReactElement {
   const [drawerState, setDrawerState] = useState<DrawerState>(defaultState);
+  /**
+   * Remembers the last expanded size chosen by the ↑/↓ button.
+   * The ▲/▼ button (and tab strip click) toggle between collapsed and this value.
+   */
+  const [expandedState, setExpandedState] = useState<"half" | "full">(
+    defaultState === "full" ? "full" : "half",
+  );
   const [sql, setSql] = useState(activeQuery?.sql ?? "-- Start writing SQL\n");
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [saveName, setSaveName] = useState("");
@@ -205,7 +212,7 @@ export function SqlWorkbench({
     if (activeQuery) {
       setSql(activeQuery.sql);
       setHasResults(false);
-      if (drawerState === "collapsed") setDrawerState("half");
+      if (drawerState === "collapsed") setDrawerState(expandedState);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeQuery?.id]);
@@ -265,7 +272,7 @@ export function SqlWorkbench({
   }
 
   function handleToggle(): void {
-    setDrawerState((s) => (s === "collapsed" ? "half" : "collapsed"));
+    setDrawerState((s) => (s === "collapsed" ? expandedState : "collapsed"));
   }
 
   /* ── Render ─────────────────────────────────────────────────────────── */
@@ -339,9 +346,11 @@ export function SqlWorkbench({
                 ▶ Run
               </DrawerBtn>
               <DrawerBtn
-                onClick={() =>
-                  setDrawerState((s) => (s === "full" ? "half" : "full"))
-                }
+                onClick={() => {
+                  const next: "half" | "full" = drawerState === "full" ? "half" : "full";
+                  setExpandedState(next);
+                  setDrawerState(next);
+                }}
               >
                 {drawerState === "full" ? "↓" : "↑"}
               </DrawerBtn>
