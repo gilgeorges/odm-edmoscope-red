@@ -68,10 +68,16 @@ export interface SqlWorkbenchProps {
    */
   onRun?: (sql: string) => void;
   /**
-   * Called when the user saves a snippet (new or fork).
-   * Receives the updated snippet object.
+   * Called when the user saves changes to the current snippet (not a fork).
+   * Receives the updated snippet object with an incremented revision.
    */
   onSave?: (query: SqlSnippet) => void;
+  /**
+   * Called when the user confirms a fork via the Fork form.
+   * Receives the new snippet object with `derived_from` set to the source
+   * snippet's id and `revision` reset to 1.
+   */
+  onFork?: (query: SqlSnippet) => void;
   /**
    * Called when the user clicks "+ New" to start a fresh scratch buffer.
    */
@@ -198,6 +204,7 @@ function StateBadge({ state }: { state: RetentionStatus }): React.ReactElement {
  *   activeQuery={currentQuery}
  *   onRun={sql => executeSql(sql)}
  *   onSave={q => saveQuery(q)}
+ *   onFork={q => saveQuery(q)}
  *   onNew={() => setCurrentQuery(null)}
  *   resultRows={results}
  *   loading={isRunning}
@@ -210,6 +217,7 @@ export function SqlWorkbench({
   activeQuery = null,
   onRun,
   onSave,
+  onFork,
   onNew,
   onNavigateDataset,
   linkedDatasetId,
@@ -290,7 +298,7 @@ export function SqlWorkbench({
       revision: 1,
       derived_from: activeQuery?.id ?? null,
     };
-    onSave?.(forked);
+    onFork?.(forked);
     setShowSaveForm(false);
     setSaveName("");
   }
