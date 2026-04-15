@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Tooltip } from "../primitives/Tooltip";
+import { Spinner } from "../primitives/Spinner";
 
 /** Visual state of the SQL drawer. */
 export type DrawerState = "collapsed" | "half" | "full";
@@ -74,6 +76,14 @@ export interface SqlWorkbenchProps {
    * When undefined, the results area is hidden.
    */
   resultRows?: ResultRow[];
+  /**
+   * When true the workbench is shown but fully disabled while the SQL engine
+   * (e.g. DuckDB) is initialising. The tab strip displays a spinner and
+   * "Loading SQL playground…" instead of the query name, and all controls are
+   * hidden. Once false the workbench becomes interactive as normal.
+   * @default false
+   */
+  initializing?: boolean;
   /**
    * When true a loading message is shown instead of results.
    * @default false
@@ -189,11 +199,19 @@ export function SqlWorkbench({
   onNavigateDataset,
   linkedDatasetId,
   resultRows,
+  initializing = false,
   loading = false,
   error,
   className = "",
 }: SqlWorkbenchProps): React.ReactElement {
   const [drawerState, setDrawerState] = useState<DrawerState>(defaultState);
+  /**
+   * Remembers the last expanded size chosen by the ↑/↓ button.
+   * The ▲/▼ button (and tab strip click) toggle between collapsed and this value.
+   */
+  const [expandedState, setExpandedState] = useState<"half" | "full">(
+    defaultState === "full" ? "full" : "half",
+  );
   const [sql, setSql] = useState(activeQuery?.sql ?? "-- Start writing SQL\n");
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [saveName, setSaveName] = useState("");
@@ -205,7 +223,7 @@ export function SqlWorkbench({
     if (activeQuery) {
       setSql(activeQuery.sql);
       setHasResults(false);
-      if (drawerState === "collapsed") setDrawerState("half");
+      if (drawerState === "collapsed") setDrawerState(expandedState);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeQuery?.id]);
@@ -239,33 +257,29 @@ export function SqlWorkbench({
   }
 
   function handleSave(): void {
-    const now = new Date().toISOString().slice(0, 10);
-    const saved: SavedQuery = activeQuery
-      ? {
-          ...activeQuery,
-          name: saveName || activeQuery.name,
-          description: saveDesc || activeQuery.description,
-          sql,
-          state: "saved",
-        }
-      : {
-          id: `Q-${Date.now()}`,
-          name: saveName || "Untitled query",
-          description: saveDesc,
-          sql,
-          state: "saved",
-          // updated is not a required field but consumers may extend the type
-          ...({} as Record<string, string>),
-          updated: now,
-        };
-    onSave?.(saved);
+    const record: SavedQuery = activeQuery
+      ? { ...activeQuery, sql }
+      : { id: `Q-${Date.now()}`, name: "Untitled query", sql, state: "draft" };
+    onSave?.(record);
+  }
+
+  function handleFork(): void {
+    const forked: SavedQuery = {
+      id: `Q-${Date.now()}`,
+      name: saveName || (activeQuery ? `${activeQuery.name} (fork)` : "Untitled query"),
+      description: saveDesc || activeQuery?.description || "",
+      sql,
+      state: "saved",
+    };
+    onSave?.(forked);
     setShowSaveForm(false);
     setSaveName("");
     setSaveDesc("");
   }
 
   function handleToggle(): void {
-    setDrawerState((s) => (s === "collapsed" ? "half" : "collapsed"));
+    if (initializing) return;
+    setDrawerState((s) => (s === "collapsed" ? expandedState : "collapsed"));
   }
 
   /* ── Render ─────────────────────────────────────────────────────────── */
@@ -289,34 +303,53 @@ export function SqlWorkbench({
       <div
         className={[
           "h-9 shrink-0 flex items-center justify-between px-4",
-          "bg-odm-surface cursor-pointer select-none",
+          "bg-odm-surface select-none",
+          initializing ? "cursor-default" : "cursor-pointer",
           drawerState !== "collapsed" ? "border-b border-odm-line" : "",
         ].join(" ")}
         onClick={handleToggle}
-        role="button"
-        aria-expanded={drawerState !== "collapsed"}
-        aria-label={drawerState === "collapsed" ? "Open SQL Workbench" : "Collapse SQL Workbench"}
+        role={initializing ? undefined : "button"}
+        aria-busy={initializing}
+        aria-expanded={initializing ? undefined : drawerState !== "collapsed"}
+        aria-label={
+          initializing
+            ? "SQL Workbench loading"
+            : drawerState === "collapsed"
+            ? "Open SQL Workbench"
+            : "Collapse SQL Workbench"
+        }
       >
         {/* Left: label + name + state badge + dataset link */}
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           <span className="font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-lux-red shrink-0">
             SQL
           </span>
-          <span className="font-mono text-[12px] text-odm-mid truncate">
-            {queryName}
-          </span>
-          {activeQuery && <StateBadge state={activeQuery.state} />}
-          {linkedDatasetId && drawerState !== "collapsed" && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onNavigateDataset?.(linkedDatasetId);
-              }}
-              className="font-sans text-[11px] text-odm-muted underline cursor-pointer bg-transparent border-0 p-0 shrink-0 hover:text-odm-mid"
-            >
-              View {linkedDatasetId} →
-            </button>
+          {initializing ? (
+            <>
+              <Spinner size="sm" label="Loading SQL playground…" />
+              <span className="font-mono text-[12px] text-odm-muted truncate">
+                Loading SQL playground…
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono text-[12px] text-odm-mid truncate">
+                {queryName}
+              </span>
+              {activeQuery && <StateBadge state={activeQuery.state} />}
+              {linkedDatasetId && drawerState !== "collapsed" && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigateDataset?.(linkedDatasetId);
+                  }}
+                  className="font-sans text-[11px] text-odm-muted underline cursor-pointer bg-transparent border-0 p-0 shrink-0 hover:text-odm-mid"
+                >
+                  View {linkedDatasetId} →
+                </button>
+              )}
+            </>
           )}
         </div>
 
@@ -325,31 +358,54 @@ export function SqlWorkbench({
           className="flex items-center gap-1.5 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          {drawerState !== "collapsed" && (
+          {!initializing && drawerState !== "collapsed" && (
             <>
-              <DrawerBtn onClick={() => { onNew?.(); setSql("-- New query\n"); setHasResults(false); setDrawerState("half"); }}>
-                + New
-              </DrawerBtn>
-              <DrawerBtn onClick={() => setShowSaveForm((s) => !s)}>
-                {activeQuery?.state === "saved" || activeQuery?.state === "implemented"
-                  ? "Fork & save"
-                  : "Save"}
-              </DrawerBtn>
-              <DrawerBtn primary onClick={handleRun}>
-                ▶ Run
-              </DrawerBtn>
-              <DrawerBtn
-                onClick={() =>
-                  setDrawerState((s) => (s === "full" ? "half" : "full"))
-                }
+              <Tooltip text="New scratch buffer" placement="top">
+                <DrawerBtn onClick={() => { onNew?.(); setSql("-- New query\n"); setHasResults(false); setDrawerState("half"); }}>
+                  + New
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Save changes to this query" placement="top">
+                <DrawerBtn onClick={handleSave}>
+                  Save
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Fork into a new named query" placement="top">
+                <DrawerBtn onClick={() => setShowSaveForm((s) => !s)}>
+                  Fork
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Execute the query" placement="top">
+                <DrawerBtn primary onClick={handleRun}>
+                  ▶ Run
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip
+                text={drawerState === "full" ? "Shrink to half height" : "Expand to full screen"}
+                placement="top"
               >
-                {drawerState === "full" ? "↓" : "↑"}
-              </DrawerBtn>
+                <DrawerBtn
+                  onClick={() => {
+                    const next: "half" | "full" = drawerState === "full" ? "half" : "full";
+                    setExpandedState(next);
+                    setDrawerState(next);
+                  }}
+                >
+                  {drawerState === "full" ? "↓" : "↑"}
+                </DrawerBtn>
+              </Tooltip>
             </>
           )}
-          <DrawerBtn onClick={handleToggle}>
-            {drawerState === "collapsed" ? "▲" : "▼"}
-          </DrawerBtn>
+          {!initializing && (
+            <Tooltip
+              text={drawerState === "collapsed" ? "Open workbench" : "Collapse workbench"}
+              placement="top"
+            >
+              <DrawerBtn onClick={handleToggle}>
+                {drawerState === "collapsed" ? "▲" : "▼"}
+              </DrawerBtn>
+            </Tooltip>
+          )}
         </div>
       </div>
 
@@ -383,8 +439,12 @@ export function SqlWorkbench({
                   "focus:border-b-lux-red transition-colors duration-100",
                 ].join(" ")}
               />
-              <DrawerBtn primary onClick={handleSave}>Save</DrawerBtn>
-              <DrawerBtn onClick={() => setShowSaveForm(false)}>Cancel</DrawerBtn>
+              <Tooltip text="Create fork" placement="top">
+                <DrawerBtn primary onClick={handleFork}>Fork</DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Discard and close" placement="top">
+                <DrawerBtn onClick={() => setShowSaveForm(false)}>Cancel</DrawerBtn>
+              </Tooltip>
             </div>
           )}
 
