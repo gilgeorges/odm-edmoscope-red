@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Tooltip } from "../primitives/Tooltip";
 
 /** Visual state of the SQL drawer. */
 export type DrawerState = "collapsed" | "half" | "full";
@@ -334,31 +335,54 @@ export function SqlWorkbench({
         >
           {drawerState !== "collapsed" && (
             <>
-              <DrawerBtn onClick={() => { onNew?.(); setSql("-- New query\n"); setHasResults(false); setDrawerState("half"); }}>
-                + New
-              </DrawerBtn>
-              <DrawerBtn onClick={() => setShowSaveForm((s) => !s)}>
-                {activeQuery?.state === "saved" || activeQuery?.state === "implemented"
-                  ? "Fork & save"
-                  : "Save"}
-              </DrawerBtn>
-              <DrawerBtn primary onClick={handleRun}>
-                ▶ Run
-              </DrawerBtn>
-              <DrawerBtn
-                onClick={() => {
-                  const next: "half" | "full" = drawerState === "full" ? "half" : "full";
-                  setExpandedState(next);
-                  setDrawerState(next);
-                }}
+              <Tooltip text="New scratch buffer" placement="top">
+                <DrawerBtn onClick={() => { onNew?.(); setSql("-- New query\n"); setHasResults(false); setDrawerState("half"); }}>
+                  + New
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip
+                text={
+                  activeQuery?.state === "saved" || activeQuery?.state === "implemented"
+                    ? "Save a copy of this query"
+                    : "Save this query"
+                }
+                placement="top"
               >
-                {drawerState === "full" ? "↓" : "↑"}
-              </DrawerBtn>
+                <DrawerBtn onClick={() => setShowSaveForm((s) => !s)}>
+                  {activeQuery?.state === "saved" || activeQuery?.state === "implemented"
+                    ? "Fork & save"
+                    : "Save"}
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Execute the query" placement="top">
+                <DrawerBtn primary onClick={handleRun}>
+                  ▶ Run
+                </DrawerBtn>
+              </Tooltip>
+              <Tooltip
+                text={drawerState === "full" ? "Shrink to half height" : "Expand to full screen"}
+                placement="top"
+              >
+                <DrawerBtn
+                  onClick={() => {
+                    const next: "half" | "full" = drawerState === "full" ? "half" : "full";
+                    setExpandedState(next);
+                    setDrawerState(next);
+                  }}
+                >
+                  {drawerState === "full" ? "↓" : "↑"}
+                </DrawerBtn>
+              </Tooltip>
             </>
           )}
-          <DrawerBtn onClick={handleToggle}>
-            {drawerState === "collapsed" ? "▲" : "▼"}
-          </DrawerBtn>
+          <Tooltip
+            text={drawerState === "collapsed" ? "Open workbench" : "Collapse workbench"}
+            placement="top"
+          >
+            <DrawerBtn onClick={handleToggle}>
+              {drawerState === "collapsed" ? "▲" : "▼"}
+            </DrawerBtn>
+          </Tooltip>
         </div>
       </div>
 
@@ -392,8 +416,12 @@ export function SqlWorkbench({
                   "focus:border-b-lux-red transition-colors duration-100",
                 ].join(" ")}
               />
-              <DrawerBtn primary onClick={handleSave}>Save</DrawerBtn>
-              <DrawerBtn onClick={() => setShowSaveForm(false)}>Cancel</DrawerBtn>
+              <Tooltip text="Confirm and save" placement="top">
+                <DrawerBtn primary onClick={handleSave}>Save</DrawerBtn>
+              </Tooltip>
+              <Tooltip text="Discard and close" placement="top">
+                <DrawerBtn onClick={() => setShowSaveForm(false)}>Cancel</DrawerBtn>
+              </Tooltip>
             </div>
           )}
 
