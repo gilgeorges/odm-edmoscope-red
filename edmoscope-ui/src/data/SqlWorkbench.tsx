@@ -172,7 +172,8 @@ function DrawerBtn({
 }
 
 /** Inline state badge shown in the tab strip. */
-function StateBadge({ state }: { state: RetentionStatus }): React.ReactElement {
+function StateBadge({ state }: { state?: RetentionStatus }): React.ReactElement {
+  if (!state) return <></>
   const s = STATE_BADGE[state];
   return (
     <span
@@ -277,9 +278,7 @@ export function SqlWorkbench({
 
   const queryName = activeQuery
     ? activeQuery.title + (isDirty ? " *" : "")
-    : sql.trim().length > 3
-      ? "Unsaved query"
-      : "SQL Workbench";
+    : "(Unsaved query)";
 
   function handleRun(): void {
     setHasResults(true);
