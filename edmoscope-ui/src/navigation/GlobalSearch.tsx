@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Spinner } from "../primitives/Spinner.tsx";
 
 /**
@@ -18,6 +18,14 @@ export interface SearchResult {
   icon?: string;
   /** Any additional data you want back in the onSelect callback. */
   meta?: unknown;
+  /**
+   * Pre-computed route string for this result.
+   * When provided alongside `linkComponent` on GlobalSearch, the result row
+   * renders as a router Link instead of a button.
+   *
+   * @example "/datasets/DS-001"
+   */
+  to?: string;
 }
 
 /**
@@ -31,6 +39,68 @@ export interface SearchResultGroup {
 }
 
 /**
+ * A quick action shown in the idle state and surfaced as a filterable
+ * "Actions" group when the search query matches the action label.
+ *
+ * @example
+ * const actions: QuickAction[] = [
+ *   { id: "new-dataset", label: "Register dataset", icon: "▣", shortcut: "⌘N",
+ *     onAction: () => openWizard("dataset") },
+ *   { id: "new-actor",   label: "Register actor",   icon: "◎", shortcut: "⌘⇧A",
+ *     onAction: () => openWizard("actor") },
+ *   { id: "sql",         label: "Open SQL workbench", icon: "⌗", to: "/sql" },
+ * ];
+ */
+export interface QuickAction {
+  /** Unique identifier. */
+  id: string;
+  /** Label shown in the idle list and as a result row when searching. */
+  label: string;
+  /** Optional icon character (same convention as SearchResult.icon). */
+  icon?: string;
+  /**
+   * Optional keyboard shortcut hint displayed on the right — display-only.
+   * Binding the actual shortcut is the consumer's responsibility.
+   * @example "⌘N"
+   */
+  shortcut?: string;
+  /**
+   * Pre-computed route. When set and `linkComponent` is provided on
+   * GlobalSearch, the action row renders as a router Link.
+   */
+  to?: string;
+  /**
+   * Callback invoked when the action row is clicked and no `to` + `linkComponent`
+   * pair is set. The overlay closes automatically before calling this.
+   */
+  onAction?: () => void;
+}
+
+/**
+ * Props forwarded to the `renderInput` render prop.
+ * Spread these onto the `<input>` (or compatible custom field element) inside
+ * your `renderInput` callback so GlobalSearch retains focus management and
+ * query binding.
+ */
+export interface SearchInputProps {
+  /** Current query value. */
+  value: string;
+  /** Called on every keystroke. */
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  /** Placeholder text (forwarded from GlobalSearchProps.placeholder). */
+  placeholder: string;
+  /** Accessible label for the input. */
+  "aria-label": string;
+  /** Tailwind classes for layout and typography. */
+  className: string;
+  /**
+   * Ref needed so GlobalSearch can auto-focus the input on open.
+   * Must reach an actual `<input>` element for focus to work.
+   */
+  ref: React.RefObject<HTMLInputElement | null>;
+}
+
+/**
  * GlobalSearch — search trigger button + fullscreen overlay.
  *
  * The trigger button is compact enough to live inside a nav column. Clicking
@@ -39,6 +109,7 @@ export interface SearchResultGroup {
  * result fetching — GlobalSearch is purely presentational.
  *
  * @example
+ * // Basic usage
  * const [open, setOpen]   = useState(false);
  * const [query, setQuery] = useState("");
  * const results           = useSearch(query);   // your hook
@@ -51,6 +122,58 @@ export interface SearchResultGroup {
  *   onQueryChange={setQuery}
  *   results={results}
  *   onSelect={result => { navigate(`/datasets/${result.id}`); setOpen(false); }}
+ * />
+ *
+ * @example
+ * // TanStack Router — result rows as Links (onSelect not needed)
+ * import { Link } from "@tanstack/react-router";
+ *
+ * const results = [{ label: "Datasets", results: [
+ *   { id: "DS-001", title: "MobiScout", icon: "▣", to: "/datasets/DS-001" },
+ * ]}];
+ *
+ * <GlobalSearch
+ *   open={open} onOpen={...} onClose={...}
+ *   query={query} onQueryChange={setQuery}
+ *   results={results}
+ *   linkComponent={Link}
+ * />
+ *
+ * @example
+ * // Quick actions — shown idle, filterable when searching
+ * <GlobalSearch
+ *   ...
+ *   quickActions={[
+ *     { id: "new-ds", label: "Register dataset", icon: "▣", shortcut: "⌘N",
+ *       onAction: () => openWizard() },
+ *     { id: "sql", label: "Open SQL workbench", icon: "⌗",
+ *       to: "/sql", linkComponent: Link },
+ *   ]}
+ * />
+ *
+ * @example
+ * // TanStack Form — custom input via renderInput
+ * import { useForm } from "@tanstack/react-form";
+ *
+ * const form = useForm({ defaultValues: { q: "" } });
+ *
+ * <GlobalSearch
+ *   open={open} onOpen={...} onClose={...}
+ *   query={form.state.values.q}
+ *   onQueryChange={v => form.setFieldValue("q", v)}
+ *   results={results}
+ *   onSelect={r => navigate(r.to ?? "/")}
+ *   renderInput={props => (
+ *     <form.Field name="q">
+ *       {field => (
+ *         <input
+ *           {...props}
+ *           value={field.state.value}
+ *           onChange={e => field.handleChange(e.target.value)}
+ *         />
+ *       )}
+ *     </form.Field>
+ *   )}
  * />
  */
 export interface GlobalSearchProps {
@@ -66,8 +189,12 @@ export interface GlobalSearchProps {
   onQueryChange: (query: string) => void;
   /** Grouped result sets. Pass an empty array while loading or when idle. */
   results: SearchResultGroup[];
-  /** Called when the user selects a result row. */
-  onSelect: (result: SearchResult) => void;
+  /**
+   * Called when the user selects a result row rendered as a button.
+   * Optional when all result rows use `linkComponent` + `result.to` for
+   * navigation — in that case the router handles the transition.
+   */
+  onSelect?: (result: SearchResult) => void;
   /**
    * Placeholder shown in both the trigger button and the search input.
    * @default "Search…"
@@ -79,6 +206,50 @@ export interface GlobalSearchProps {
    * @default false
    */
   loading?: boolean;
+  /**
+   * Router Link component used to render result rows (and quick action rows)
+   * that carry a `to` field. Pass the Link component from your router
+   * (e.g. TanStack Router's `Link`) so the overlay integrates with your
+   * router without hard-coding it.
+   *
+   * When omitted, all rows render as `<button>` elements.
+   *
+   * @example
+   * import { Link } from "@tanstack/react-router";
+   * <GlobalSearch linkComponent={Link} ... />
+   */
+  linkComponent?: React.ElementType;
+  /**
+   * Render prop for the search input element.
+   *
+   * When provided, GlobalSearch calls this instead of rendering its built-in
+   * `<input>`. The function receives all default input props via
+   * `SearchInputProps`; spread them onto your custom element so query binding
+   * and auto-focus are preserved.
+   *
+   * @example
+   * renderInput={props => (
+   *   <form.Field name="q">
+   *     {field => (
+   *       <input
+   *         {...props}
+   *         value={field.state.value}
+   *         onChange={e => field.handleChange(e.target.value)}
+   *       />
+   *     )}
+   *   </form.Field>
+   * )}
+   */
+  renderInput?: (props: SearchInputProps) => React.ReactNode;
+  /**
+   * Optional quick actions displayed in the idle state (before 2 chars are
+   * typed) and surfaced as a filterable "Actions" group when the query matches
+   * the action label. Omitting this prop leaves the idle state unchanged.
+   *
+   * Each action renders as a router Link when `to` + `linkComponent` are set,
+   * otherwise calls `onAction` and closes the overlay.
+   */
+  quickActions?: QuickAction[];
 }
 
 export function GlobalSearch({
@@ -91,14 +262,22 @@ export function GlobalSearch({
   onSelect,
   placeholder = "Search…",
   loading = false,
+  linkComponent,
+  renderInput,
+  quickActions = [],
 }: GlobalSearchProps): React.ReactElement {
-  const inputRef   = useRef<HTMLInputElement>(null);
-  const isMac      = typeof navigator !== "undefined" &&
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isMac    = typeof navigator !== "undefined" &&
     /Mac|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent);
-  const kbdHint    = isMac ? "⌘K" : "Ctrl K";
+  const kbdHint  = isMac ? "⌘K" : "Ctrl K";
 
   const totalCount = results.reduce((n, g) => n + g.results.length, 0);
   const isEmpty    = query.length >= 2 && totalCount === 0 && !loading;
+
+  // Actions visible in search state: filter by label match
+  const matchingActions = query.length >= 2
+    ? quickActions.filter(a => a.label.toLowerCase().includes(query.toLowerCase()))
+    : [];
 
   // ⌘K / Ctrl+K global shortcut
   useEffect(() => {
@@ -130,8 +309,66 @@ export function GlobalSearch({
   }, [open]);
 
   function handleSelect(result: SearchResult): void {
-    onSelect(result);
+    onSelect?.(result);
     onClose();
+  }
+
+  function handleActionClick(action: QuickAction): void {
+    action.onAction?.();
+    onClose();
+  }
+
+  const rowClassName = [
+    "w-full flex items-center gap-3 px-4 py-2.5 text-left",
+    "border-b border-odm-line-l border-0",
+    "bg-transparent cursor-pointer",
+    "hover:bg-odm-card transition-colors duration-75",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
+  ].join(" ");
+
+  /** Render a single action as a Link or button row. */
+  function renderActionRow(action: QuickAction): React.ReactElement {
+    const content = (
+      <>
+        {action.icon && (
+          <span aria-hidden="true" className="text-odm-faint text-sm flex-shrink-0 w-4 text-center leading-none">
+            {action.icon}
+          </span>
+        )}
+        <span className="flex-1 font-sans text-[14px] font-semibold text-odm-ink truncate">
+          {action.label}
+        </span>
+        {action.shortcut && (
+          <span className="font-mono text-[11px] text-odm-faint flex-shrink-0">
+            {action.shortcut}
+          </span>
+        )}
+      </>
+    );
+
+    if (linkComponent && action.to) {
+      const LinkComponent = linkComponent;
+      return (
+        <LinkComponent
+          key={action.id}
+          to={action.to}
+          onClick={onClose}
+          className={rowClassName}
+        >
+          {content}
+        </LinkComponent>
+      );
+    }
+
+    return (
+      <button
+        key={action.id}
+        onClick={() => handleActionClick(action)}
+        className={rowClassName}
+      >
+        {content}
+      </button>
+    );
   }
 
   return (
@@ -188,14 +425,26 @@ export function GlobalSearch({
               className="flex items-center gap-3 px-4 py-3 border-b-[3px] border-b-lux-red flex-shrink-0"
             >
               <span aria-hidden="true" className="text-[18px] text-odm-muted flex-shrink-0 leading-none">⌕</span>
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={e => onQueryChange(e.target.value)}
-                aria-label="Search"
-                placeholder={placeholder}
-                className="flex-1 min-w-0 font-sans text-[15px] text-odm-ink bg-transparent border-0 outline-none placeholder:text-odm-faint"
-              />
+              {renderInput
+                ? renderInput({
+                    ref: inputRef,
+                    value: query,
+                    onChange: e => onQueryChange(e.target.value),
+                    placeholder,
+                    "aria-label": "Search",
+                    className: "flex-1 min-w-0 font-sans text-[15px] text-odm-ink bg-transparent border-0 outline-none placeholder:text-odm-faint",
+                  })
+                : (
+                  <input
+                    ref={inputRef}
+                    value={query}
+                    onChange={e => onQueryChange(e.target.value)}
+                    aria-label="Search"
+                    placeholder={placeholder}
+                    className="flex-1 min-w-0 font-sans text-[15px] text-odm-ink bg-transparent border-0 outline-none placeholder:text-odm-faint"
+                  />
+                )
+              }
               {loading && <Spinner size="sm" />}
               {query && !loading && (
                 <button
@@ -220,68 +469,113 @@ export function GlobalSearch({
               aria-label="Search results"
               className="flex-1 overflow-y-auto"
             >
-              {/* Idle */}
+              {/* Idle state */}
               {query.length < 2 && (
-                <div className="py-8 text-center font-sans text-[13px] text-odm-muted">
-                  <div aria-hidden="true" className="text-3xl opacity-20 mb-3 leading-none">⌕</div>
-                  Type at least 2 characters to search.
-                  <div className="mt-3 flex items-center justify-center gap-1.5">
-                    {kbdHint.split(" ").map((key, i) => (
-                      <kbd key={i} className="font-mono text-[11px] text-odm-faint border border-odm-line-l border-b-odm-line px-1.5 leading-5">
-                        {key}
-                      </kbd>
-                    ))}
-                    <span className="text-odm-faint text-xs">to open anytime</span>
+                <>
+                  {/* Quick actions list — shown when actions are provided */}
+                  {quickActions.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 font-sans text-[10px] font-bold tracking-[0.12em] uppercase text-odm-muted bg-odm-surface border-b border-odm-line-l">
+                        Actions
+                      </div>
+                      {quickActions.map(renderActionRow)}
+                    </div>
+                  )}
+                  {/* Search hint */}
+                  <div className={[
+                    "text-center font-sans text-[13px] text-odm-muted",
+                    quickActions.length > 0 ? "py-4" : "py-8",
+                  ].join(" ")}>
+                    {quickActions.length === 0 && (
+                      <div aria-hidden="true" className="text-3xl opacity-20 mb-3 leading-none">⌕</div>
+                    )}
+                    Type at least 2 characters to search.
+                    {quickActions.length === 0 && (
+                      <div className="mt-3 flex items-center justify-center gap-1.5">
+                        {kbdHint.split(" ").map((key, i) => (
+                          <kbd key={i} className="font-mono text-[11px] text-odm-faint border border-odm-line-l border-b-odm-line px-1.5 leading-5">
+                            {key}
+                          </kbd>
+                        ))}
+                        <span className="text-odm-faint text-xs">to open anytime</span>
+                      </div>
+                    )}
                   </div>
-                </div>
+                </>
               )}
 
               {/* No results */}
-              {isEmpty && (
+              {isEmpty && matchingActions.length === 0 && (
                 <div className="py-8 text-center font-sans text-[13px] text-odm-muted">
                   No results for <strong>"{query}"</strong>
                 </div>
               )}
 
-              {/* Result groups */}
+              {/* Search state: matching actions pinned above regular results */}
+              {query.length >= 2 && matchingActions.length > 0 && (
+                <div>
+                  <div className="px-4 py-2 font-sans text-[10px] font-bold tracking-[0.12em] uppercase text-odm-muted bg-odm-surface border-b border-odm-line-l">
+                    Actions · {matchingActions.length}
+                  </div>
+                  {matchingActions.map(renderActionRow)}
+                </div>
+              )}
+
+              {/* Regular result groups */}
               {results.map(group => (
                 <div key={group.label}>
                   {/* Group header */}
                   <div className="px-4 py-2 font-sans text-[10px] font-bold tracking-[0.12em] uppercase text-odm-muted bg-odm-surface border-b border-odm-line-l">
                     {group.label} · {group.results.length}
                   </div>
-                  {group.results.map(result => (
-                    <button
-                      key={result.id}
-                      onClick={() => handleSelect(result)}
-                      className={[
-                        "w-full flex items-center gap-3 px-4 py-2.5 text-left",
-                        "border-b border-odm-line-l border-0",
-                        "bg-transparent cursor-pointer",
-                        "hover:bg-odm-card transition-colors duration-75",
-                        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
-                      ].join(" ")}
-                    >
-                      {result.icon && (
-                        <span aria-hidden="true" className="text-odm-faint text-sm flex-shrink-0 w-4 text-center leading-none">
-                          {result.icon}
-                        </span>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-sans text-[14px] font-semibold text-odm-ink truncate">
-                          {result.title}
-                        </div>
-                        {result.subtitle && (
-                          <div className="font-sans text-xs text-odm-muted truncate mt-0.5">
-                            {result.subtitle}
-                          </div>
+                  {group.results.map(result => {
+                    const rowContent = (
+                      <>
+                        {result.icon && (
+                          <span aria-hidden="true" className="text-odm-faint text-sm flex-shrink-0 w-4 text-center leading-none">
+                            {result.icon}
+                          </span>
                         )}
-                      </div>
-                      <span className="font-mono text-[11px] text-odm-faint flex-shrink-0">
-                        {result.id}
-                      </span>
-                    </button>
-                  ))}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-sans text-[14px] font-semibold text-odm-ink truncate">
+                            {result.title}
+                          </div>
+                          {result.subtitle && (
+                            <div className="font-sans text-xs text-odm-muted truncate mt-0.5">
+                              {result.subtitle}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-mono text-[11px] text-odm-faint flex-shrink-0">
+                          {result.id}
+                        </span>
+                      </>
+                    );
+
+                    if (linkComponent && result.to) {
+                      const LinkComponent = linkComponent;
+                      return (
+                        <LinkComponent
+                          key={result.id}
+                          to={result.to}
+                          onClick={onClose}
+                          className={rowClassName}
+                        >
+                          {rowContent}
+                        </LinkComponent>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={result.id}
+                        onClick={() => handleSelect(result)}
+                        className={rowClassName}
+                      >
+                        {rowContent}
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
             </div>

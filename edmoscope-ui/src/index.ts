@@ -70,7 +70,7 @@ export { Breadcrumb }             from "./navigation/Breadcrumb.tsx";
 export type { BreadcrumbProps, BreadcrumbItem } from "./navigation/Breadcrumb.tsx";
 
 export { GlobalSearch }           from "./navigation/GlobalSearch.tsx";
-export type { GlobalSearchProps, SearchResult, SearchResultGroup } from "./navigation/GlobalSearch.tsx";
+export type { GlobalSearchProps, SearchResult, SearchResultGroup, SearchInputProps, QuickAction } from "./navigation/GlobalSearch.tsx";
 
 export { Tabs }                   from "./navigation/Tabs.tsx";
 export type { TabsProps, TabListProps, TabProps, TabPanelProps } from "./navigation/Tabs.tsx";

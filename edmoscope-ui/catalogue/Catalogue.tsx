@@ -129,6 +129,18 @@ function CatalogueExample({ label, code, children, bg = "white" }: {
 /* ─────────────────────────────────────────────────────────────────────────────
    Toast trigger helper (needs to be inside ToastProvider)
 ───────────────────────────────────────────────────────────────────────────── */
+
+// Defined at module level so its reference is stable across renders.
+// Defining forwardRef components inside a render function creates a new
+// component type on every render, causing React to unmount/remount rows.
+const MockLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }
+>(({ to, children, ...rest }, ref) => (
+  <a ref={ref} href={to} {...rest}>{children}</a>
+));
+MockLink.displayName = "MockLink";
+
 function GlobalSearchDemo(): React.ReactElement {
   const [open, setOpen]   = useState(false);
   const [query, setQuery] = useState("");
@@ -151,6 +163,67 @@ function GlobalSearchDemo(): React.ReactElement {
       results={DEMO_RESULTS}
       onSelect={r => alert(`Selected: ${r.title}`)}
       placeholder="Search datasets, actors…"
+    />
+  );
+}
+
+function GlobalSearchLinkDemo(): React.ReactElement {
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState("");
+  // MockLink is defined at module level (stable reference).
+
+  const DEMO_RESULTS = query.length >= 2 ? [
+    { label: "Datasets · 2", results: [
+      { id: "DS-001", title: "MobiScout Count Data", subtitle: "MobiScout AG · Source", icon: "▣", to: "/datasets/DS-001" },
+      { id: "DS-002", title: "SEBES Traffic Counts", subtitle: "SEBES · Source",        icon: "▣", to: "/datasets/DS-002" },
+    ]},
+    { label: "Actors · 1", results: [
+      { id: "AC-007", title: "Julie Schmit", subtitle: "Data steward", icon: "◎", to: "/actors/AC-007" },
+    ]},
+  ] : [];
+
+  return (
+    <GlobalSearch
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => { setOpen(false); setQuery(""); }}
+      query={query}
+      onQueryChange={setQuery}
+      results={DEMO_RESULTS}
+      linkComponent={MockLink}
+      placeholder="Search datasets, actors…"
+    />
+  );
+}
+
+function GlobalSearchActionsDemo(): React.ReactElement {
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState("");
+
+  const DEMO_RESULTS = query.length >= 2 ? [
+    { label: "Datasets · 2", results: [
+      { id: "DS-001", title: "MobiScout Count Data", subtitle: "MobiScout AG · Source", icon: "▣" },
+      { id: "DS-002", title: "SEBES Traffic Counts", subtitle: "SEBES · Source",        icon: "▣" },
+    ]},
+  ] : [];
+
+  const QUICK_ACTIONS = [
+    { id: "new-dataset", label: "Register dataset",    icon: "▣", shortcut: "⌘N",  onAction: () => alert("Register dataset") },
+    { id: "new-actor",   label: "Register actor",      icon: "◎", shortcut: "⌘⇧A", onAction: () => alert("Register actor")   },
+    { id: "sql",         label: "Open SQL workbench",  icon: "⌗", shortcut: "⌘⇧Q", onAction: () => alert("Open workbench")   },
+  ];
+
+  return (
+    <GlobalSearch
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => { setOpen(false); setQuery(""); }}
+      query={query}
+      onQueryChange={setQuery}
+      results={DEMO_RESULTS}
+      onSelect={r => alert(`Selected: ${r.title}`)}
+      quickActions={QUICK_ACTIONS}
+      placeholder="Search or run an action…"
     />
   );
 }
@@ -1164,6 +1237,96 @@ const [query, setQuery] = useState("");
 />`}
           >
             <GlobalSearchDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Result rows as router Links (linkComponent + result.to)"
+            code={`import { Link } from "@tanstack/react-router";
+
+// Compute result.to when building results — e.g. from id and type:
+const results = [
+  { label: "Datasets · 2", results: [
+    { id: "DS-001", title: "MobiScout Count Data", icon: "▣", to: "/datasets/DS-001" },
+    { id: "DS-002", title: "SEBES Traffic Counts", icon: "▣", to: "/datasets/DS-002" },
+  ]},
+  { label: "Actors · 1", results: [
+    { id: "AC-007", title: "Julie Schmit", icon: "◎", to: "/actors/AC-007" },
+  ]},
+];
+
+// onSelect is optional — the router handles navigation via the Link href.
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); setQuery(""); }}
+  query={query}
+  onQueryChange={setQuery}
+  results={results}
+  linkComponent={Link}
+/>`}
+          >
+            <GlobalSearchLinkDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="Custom input via renderInput (TanStack Form field)"
+            code={`import { useForm } from "@tanstack/react-form";
+
+const form = useForm({ defaultValues: { q: "" } });
+
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); form.setFieldValue("q", ""); }}
+  query={form.state.values.q}
+  onQueryChange={v => form.setFieldValue("q", v)}
+  results={results}
+  linkComponent={Link}
+  renderInput={props => (
+    <form.Field name="q">
+      {field => (
+        <input
+          {...props}
+          value={field.state.value}
+          onChange={e => field.handleChange(e.target.value)}
+        />
+      )}
+    </form.Field>
+  )}
+/>`}
+          >
+            {/* Live preview reuses the actions demo — TanStack Form is not
+                a catalogue dependency. The code snippet shows the real
+                wiring for a consuming app. */}
+            <GlobalSearchActionsDemo />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label={'Quick actions — idle list + searchable (type \u201creg\u201d or \u201csql\u201d to filter)'}
+            code={`const quickActions = [
+  { id: "new-dataset", label: "Register dataset",   icon: "▣", shortcut: "⌘N",
+    onAction: () => openWizard("dataset") },
+  { id: "new-actor",   label: "Register actor",     icon: "◎", shortcut: "⌘⇧A",
+    onAction: () => openWizard("actor") },
+  { id: "sql",         label: "Open SQL workbench", icon: "⌗", shortcut: "⌘⇧Q",
+    to: "/sql", // or onAction if no router Link needed
+  },
+];
+
+<GlobalSearch
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => { setOpen(false); setQuery(""); }}
+  query={query}
+  onQueryChange={setQuery}
+  results={results}
+  onSelect={r => navigate(r.to ?? "/")}
+  quickActions={quickActions}
+  linkComponent={Link}
+  placeholder="Search or run an action…"
+/>`}
+          >
+            <GlobalSearchActionsDemo />
           </CatalogueExample>
         </CatalogueSection>
 
