@@ -26,7 +26,7 @@ import {
   // Feedback
   EmptyState, ErrorBoundary, ToastProvider, useToast, Notice,
   // Forms
-  Input, Textarea, Select, SearchBox, FilterBar, Combobox, CardSelect, FileUpload,
+  Input, Textarea, Select, SearchBox, FilterBar, ToggleRow, Combobox, CardSelect, FileUpload,
   DependencySearchInput, DependencyList,
   // Navigation (Tabs)
   Tabs,
@@ -244,6 +244,38 @@ function ListDetailPanelInteractive(): React.ReactElement {
    Sample data
 ───────────────────────────────────────────────────────────────────────────── */
 type SampleRow = { id: string; name: string; tier: "bronze" | "silver" | "gold"; source: string };
+
+function ToggleRowDemo(): React.ReactElement {
+  const [filter, setFilter] = useState("all");
+  return (
+    <CatalogueExample
+      label="Interactive — with counts"
+      code={`const [filter, setFilter] = useState("all");
+
+<ToggleRow
+  value={filter}
+  onChange={setFilter}
+  options={[
+    { value: "all",       label: "All",       count: 6 },
+    { value: "draft",     label: "Draft",     count: 2 },
+    { value: "published", label: "Published", count: 3 },
+    { value: "archived",  label: "Archived",  count: 1 },
+  ]}
+/>`}
+    >
+      <ToggleRow
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { value: "all",       label: "All",       count: 6 },
+          { value: "draft",     label: "Draft",     count: 2 },
+          { value: "published", label: "Published", count: 3 },
+          { value: "archived",  label: "Archived",  count: 1 },
+        ]}
+      />
+    </CatalogueExample>
+  );
+}
 
 const SAMPLE_DATA: SampleRow[] = [
   { id: "DS-001", name: "MobiScout Count Data",    tier: "gold",   source: "MobiScout" },
@@ -1312,6 +1344,35 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
           </CatalogueExample>
         </CatalogueSection>
 
+        {/* ── Forms: ToggleRow ──────────────────────────────────────────── */}
+        <CatalogueSection title="ToggleRow">
+          <ToggleRowDemo />
+          <CatalogueExample
+            label="Without counts"
+            code={`<ToggleRow
+  value="published"
+  onChange={setValue}
+  options={[
+    { value: "all",       label: "All" },
+    { value: "draft",     label: "Draft" },
+    { value: "published", label: "Published" },
+    { value: "archived",  label: "Archived" },
+  ]}
+/>`}
+          >
+            <ToggleRow
+              value="published"
+              onChange={() => undefined}
+              options={[
+                { value: "all",       label: "All" },
+                { value: "draft",     label: "Draft" },
+                { value: "published", label: "Published" },
+                { value: "archived",  label: "Archived" },
+              ]}
+            />
+          </CatalogueExample>
+        </CatalogueSection>
+
         {/* ── Data ──────────────────────────────────────────────────────── */}
         <div id="cat-data" />
         <CatalogueSection title="TierBadge">
@@ -1853,6 +1914,62 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
                 </>
               }
             />
+          </CatalogueExample>
+
+          <CatalogueExample
+            label="showThread={false} — badge-driven status, no dot/thread"
+            code={`// Use showThread={false} when status is conveyed by a badge in the header
+// instead of the left coloured dot. Ideal for query-library style lists.
+<EntryCard
+  showThread={false}
+  header={<><Badge variant="ok">Published</Badge><span className="font-sans text-[11px] text-odm-muted">QR-0042</span></>}
+  title="Trips by origin zone — weekday peak"
+  description="Aggregates morning peak trips (7–9h) per origin zone for modal share analysis."
+  footer={<><Badge>OD Matrix 2023 Q4</Badge><Badge>Zone Reference</Badge></>}
+  onClick={() => {}}
+/>
+<EntryCard
+  showThread={false}
+  header={<><Badge variant="warn">Draft</Badge><span className="font-sans text-[11px] text-odm-muted">QR-0117</span></>}
+  title="Modal share by municipality"
+  description="Breaks down mode of transport per commune. Still under review."
+  footer={<><Badge>Enquête ménages 2024</Badge></>}
+  onClick={() => {}}
+/>`}
+          >
+            <div className="flex flex-col gap-1.5">
+              <EntryCard
+                showThread={false}
+                header={
+                  <>
+                    <Badge variant="ok">Published</Badge>
+                    <span className="font-sans text-[11px] text-odm-muted">QR-0042</span>
+                  </>
+                }
+                title="Trips by origin zone — weekday peak"
+                description="Aggregates morning peak trips (7–9h) per origin zone for modal share analysis."
+                footer={
+                  <>
+                    <Badge>OD Matrix 2023 Q4</Badge>
+                    <Badge>Zone Reference</Badge>
+                  </>
+                }
+                onClick={() => {}}
+              />
+              <EntryCard
+                showThread={false}
+                header={
+                  <>
+                    <Badge variant="warn">Draft</Badge>
+                    <span className="font-sans text-[11px] text-odm-muted">QR-0117</span>
+                  </>
+                }
+                title="Modal share by municipality"
+                description="Breaks down mode of transport per commune. Still under review."
+                footer={<><Badge>Enquête ménages 2024</Badge></>}
+                onClick={() => {}}
+              />
+            </div>
           </CatalogueExample>
 
           <CatalogueExample
