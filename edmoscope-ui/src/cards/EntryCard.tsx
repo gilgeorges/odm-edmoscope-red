@@ -31,6 +31,14 @@ interface EntryCardOwnProps {
   status?: EntryCardStatus;
 
   /**
+   * When `false`, hides the left status-dot thread column and renders the card
+   * as a single-column block without the coloured accent border. Useful for
+   * list pages where status is conveyed via a badge in the card header instead.
+   * @default true
+   */
+  showThread?: boolean;
+
+  /**
    * Reference line rendered above the title — typically contains ID chip,
    * source badge, date, and tier/state badges.
    */
@@ -132,6 +140,7 @@ export type EntryCardProps<T extends React.ElementType = "div"> = EntryCardOwnPr
 export function EntryCard<T extends React.ElementType = "div">({
   as,
   status = "neutral",
+  showThread = true,
   header,
   title,
   description,
@@ -154,6 +163,65 @@ export function EntryCard<T extends React.ElementType = "div">({
     }
   }
 
+  const body = (
+    <Body
+      {...(rest as object)}
+      role={isInteractiveDiv ? "button" : undefined}
+      tabIndex={isInteractiveDiv ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={isInteractiveDiv ? handleKeyDown : undefined}
+      className={[
+        showThread ? "border-l-[3px] px-4 py-[14px] pl-[18px]" : "px-4 py-[14px]",
+        "transition-colors duration-[120ms]",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red",
+        hovered
+          ? showThread
+            ? ["bg-white border border-odm-line-h", accent].join(" ")
+            : "bg-white border border-odm-line-h"
+          : showThread
+            ? "bg-odm-card border border-odm-line border-l-odm-line-l"
+            : "bg-odm-card border border-odm-line",
+      ].join(" ")}
+    >
+      {header && (
+        <div className="flex gap-2.5 items-center flex-wrap mb-1.5">
+          {header}
+        </div>
+      )}
+
+      {title && (
+        <div className="font-sans text-base font-bold text-odm-ink mb-1 tracking-[-0.01em] leading-[1.3]">
+          {title}
+        </div>
+      )}
+
+      {description && (
+        <div className="font-sans text-[13px] text-odm-mid leading-[1.65] mb-2.5">
+          {description}
+        </div>
+      )}
+
+      {footer && (
+        <div className="flex gap-2 flex-wrap items-center pt-2.5 border-t border-t-odm-line-l">
+          {footer}
+        </div>
+      )}
+    </Body>
+  );
+
+  if (!showThread) {
+    return (
+      <article
+        aria-label={title}
+        className={["mb-1.5", className].join(" ")}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {body}
+      </article>
+    );
+  }
+
   return (
     <article
       aria-label={title}
@@ -174,45 +242,7 @@ export function EntryCard<T extends React.ElementType = "div">({
       </div>
 
       {/* Card body — div, router Link, or any other element via `as` prop */}
-      <Body
-        {...(rest as object)}
-        role={isInteractiveDiv ? "button" : undefined}
-        tabIndex={isInteractiveDiv ? 0 : undefined}
-        onClick={onClick}
-        onKeyDown={isInteractiveDiv ? handleKeyDown : undefined}
-        className={[
-          "border-l-[3px] px-4 py-[14px] pl-[18px]",
-          "transition-colors duration-[120ms]",
-          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red",
-          hovered
-            ? ["bg-white border border-odm-line-h", accent].join(" ")
-            : "bg-odm-card border border-odm-line border-l-odm-line-l",
-        ].join(" ")}
-      >
-        {header && (
-          <div className="flex gap-2.5 items-center flex-wrap mb-1.5">
-            {header}
-          </div>
-        )}
-
-        {title && (
-          <div className="font-sans text-base font-bold text-odm-ink mb-1 tracking-[-0.01em] leading-[1.3]">
-            {title}
-          </div>
-        )}
-
-        {description && (
-          <div className="font-sans text-[13px] text-odm-mid leading-[1.65] mb-2.5">
-            {description}
-          </div>
-        )}
-
-        {footer && (
-          <div className="flex gap-2 flex-wrap items-center pt-2.5 border-t border-t-odm-line-l">
-            {footer}
-          </div>
-        )}
-      </Body>
+      {body}
     </article>
   );
 }

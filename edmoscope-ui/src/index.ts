@@ -101,6 +101,9 @@ export type { SearchBoxProps }    from "./forms/SearchBox.tsx";
 export { FilterBar }              from "./forms/FilterBar.tsx";
 export type { FilterBarProps, FilterDefinition, FilterState } from "./forms/FilterBar.tsx";
 
+export { ToggleRow }              from "./forms/ToggleRow.tsx";
+export type { ToggleRowProps, ToggleRowOption } from "./forms/ToggleRow.tsx";
+
 export { Combobox }               from "./forms/Combobox.tsx";
 export type { ComboboxProps, ComboboxOption } from "./forms/Combobox.tsx";
 
