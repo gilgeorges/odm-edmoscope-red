@@ -31,9 +31,10 @@ import {
   // Navigation (Tabs)
   Tabs,
   // Data
-  DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench,
+  DataTable, MetadataList, StatCard, StatRow, TierBadge, SqlWorkbench, CodeBlock,
   // Cards
   EntryCard, StackPanel, ProvenanceCard,
+  AssetHeader, DataFileRow, ServiceCard, ActivityTimeline, SectionCard,
   // Overlays
   Modal, Drawer, ConfirmDialog,
 } from "../src/index.ts";
@@ -485,6 +486,77 @@ function TabsSection(): React.ReactElement {
               <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#1A1A1A" }}>
                 Lineage panel content
               </p>
+            </Tabs.Panel>
+          </Tabs>
+        </div>
+      </CatalogueExample>
+
+      <CatalogueExample
+        label="With icons — dataset detail navigation"
+        code={`<Tabs defaultTab="gouvernance">
+  <Tabs.List>
+    <Tabs.Tab id="overview" icon={<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="7" width="2" height="5" rx="0.5" fill="currentColor"/><rect x="5" y="4" width="2" height="8" rx="0.5" fill="currentColor"/><rect x="9" y="1" width="2" height="11" rx="0.5" fill="currentColor"/></svg>}>Vue d'ensemble</Tabs.Tab>
+    <Tabs.Tab id="technique" icon={<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/><rect x="7.5" y="1" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/><rect x="1" y="7.5" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/></svg>}>Technique</Tabs.Tab>
+    <Tabs.Tab id="gouvernance" icon={<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5L1.5 4V6.5C1.5 9.2 3.7 11.3 6.5 11.8C9.3 11.3 11.5 9.2 11.5 6.5V4L6.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>}>Gouvernance</Tabs.Tab>
+    <Tabs.Tab id="lignage" icon={<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="2.5" cy="6.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="10.5" cy="2.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="10.5" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/><path d="M4 6.5H7.5M4 6.5L7.5 2.5M4 6.5L7.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>}>Lignage</Tabs.Tab>
+    <Tabs.Tab id="provenance" icon={<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 8C1.5 8 3 5 6.5 5C10 5 11.5 8 11.5 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M1.5 5C1.5 5 3 2 6.5 2C10 2 11.5 5 11.5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.4"/><circle cx="6.5" cy="10" r="1.5" fill="currentColor"/></svg>}>Provenance</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel id="gouvernance" className="pt-4">…governance content…</Tabs.Panel>
+</Tabs>`}
+      >
+        <div style={{ maxWidth: 640 }}>
+          <Tabs defaultTab="gouvernance">
+            <Tabs.List>
+              <Tabs.Tab id="overview" icon={
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <rect x="1" y="7" width="2" height="5" rx="0.5" fill="currentColor"/>
+                  <rect x="5" y="4" width="2" height="8" rx="0.5" fill="currentColor"/>
+                  <rect x="9" y="1" width="2" height="11" rx="0.5" fill="currentColor"/>
+                </svg>
+              }>Vue d&apos;ensemble</Tabs.Tab>
+              <Tabs.Tab id="technique" icon={
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <rect x="1" y="1" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <rect x="7.5" y="1" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <rect x="1" y="7.5" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
+                </svg>
+              }>Technique</Tabs.Tab>
+              <Tabs.Tab id="gouvernance" icon={
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <path d="M6.5 1.5L1.5 4V6.5C1.5 9.2 3.7 11.3 6.5 11.8C9.3 11.3 11.5 9.2 11.5 6.5V4L6.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+              }>Gouvernance</Tabs.Tab>
+              <Tabs.Tab id="lignage" icon={
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <circle cx="2.5" cy="6.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <circle cx="10.5" cy="2.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <circle cx="10.5" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M4 6.5H7.5M4 6.5L7.5 2.5M4 6.5L7.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              }>Lignage</Tabs.Tab>
+              <Tabs.Tab id="provenance" icon={
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <path d="M1.5 8C1.5 8 3 5 6.5 5C10 5 11.5 8 11.5 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                  <path d="M1.5 5C1.5 5 3 2 6.5 2C10 2 11.5 5 11.5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.4"/>
+                  <circle cx="6.5" cy="10" r="1.5" fill="currentColor"/>
+                </svg>
+              }>Provenance</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel id="overview" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>Vue d&apos;ensemble content</p>
+            </Tabs.Panel>
+            <Tabs.Panel id="technique" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>Technique content</p>
+            </Tabs.Panel>
+            <Tabs.Panel id="gouvernance" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>Gouvernance content</p>
+            </Tabs.Panel>
+            <Tabs.Panel id="lignage" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>Lignage content</p>
+            </Tabs.Panel>
+            <Tabs.Panel id="provenance" className="pt-4">
+              <p style={{ fontFamily: "Montserrat, sans-serif", fontSize: 13, color: "#606060" }}>Provenance content</p>
             </Tabs.Panel>
           </Tabs>
         </div>
@@ -2075,6 +2147,349 @@ toast.info("Info", "Catalogue last updated 2 hours ago.");`}>
               <Icon symbol="⌕" size="lg" />
               <Icon symbol="⌕" size="xl" />
               <Icon symbol="✓" label="Success" size="lg" />
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── AssetHeader ───────────────────────────────────────────────── */}
+        <CatalogueSection title="AssetHeader">
+          <CatalogueExample
+            label="Active dataset — with icon, subtitle and action"
+            code={`<AssetHeader
+  icon={<svg …>…</svg>}
+  title="Comptages de trafic routier — réseau national"
+  subtitle="s3://odm-silver/traffic/comptages-national/"
+  status="active"
+  actionLabel="Explorer"
+  actionIcon={<svg …>…</svg>}
+  onAction={() => {}}
+/>`}
+          >
+            <AssetHeader
+              icon={
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <ellipse cx="10" cy="5.5" rx="7" ry="2.5" stroke="white" strokeWidth="1.4"/>
+                  <path d="M3 5.5V10C3 11.38 6.13 12.5 10 12.5C13.87 12.5 17 11.38 17 10V5.5" stroke="white" strokeWidth="1.4"/>
+                  <path d="M3 10V14.5C3 15.88 6.13 17 10 17C13.87 17 17 15.88 17 14.5V10" stroke="white" strokeWidth="1.4"/>
+                </svg>
+              }
+              title="Comptages de trafic routier — réseau national"
+              subtitle="s3://odm-silver/traffic/comptages-national/"
+              status="active"
+              actionLabel="Explorer"
+              actionIcon={
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2 7H12M8 3L12 7L8 11" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+              onAction={() => {}}
+            />
+          </CatalogueExample>
+          <CatalogueExample
+            label="All status variants"
+            code={`<AssetHeader icon={…} title="Active dataset" status="active" />
+<AssetHeader icon={…} title="Draft asset" status="draft" />
+<AssetHeader icon={…} title="Archived dataset" status="archived" />
+<AssetHeader icon={…} title="Deprecated query" status="deprecated" />`}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {(["active", "draft", "archived", "deprecated"] as const).map(s => (
+                <AssetHeader
+                  key={s}
+                  icon={<span style={{ color: "white", fontSize: 18 }}>▣</span>}
+                  title={`Dataset — status: ${s}`}
+                  subtitle="s3://odm-silver/example/"
+                  status={s}
+                />
+              ))}
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── CodeBlock ─────────────────────────────────────────────────── */}
+        <CatalogueSection title="CodeBlock">
+          <CatalogueExample
+            label="S3 URI identifier"
+            code={`<CodeBlock language="S3 URI">
+  s3://odm-silver/traffic/comptages-national/
+</CodeBlock>`}
+          >
+            <CodeBlock language="S3 URI">
+              s3://odm-silver/traffic/comptages-national/
+            </CodeBlock>
+          </CatalogueExample>
+          <CatalogueExample
+            label="SQL snippet — size sm / md / lg"
+            code={`<CodeBlock language="SQL" size="sm" nowrap>
+  SELECT sensor_id, AVG(avg_speed_kmh) FROM comptages_national GROUP BY 1;
+</CodeBlock>`}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <CodeBlock language="SQL" size="sm" nowrap>
+                SELECT sensor_id, AVG(avg_speed_kmh) FROM comptages_national GROUP BY 1;
+              </CodeBlock>
+              <CodeBlock language="SQL" size="md" nowrap>
+                SELECT sensor_id, AVG(avg_speed_kmh) FROM comptages_national GROUP BY 1;
+              </CodeBlock>
+              <CodeBlock language="SQL" size="lg" nowrap>
+                SELECT sensor_id, AVG(avg_speed_kmh) FROM comptages_national GROUP BY 1;
+              </CodeBlock>
+            </div>
+          </CatalogueExample>
+          <CatalogueExample
+            label="Multi-line (wrap)"
+            code={`<CodeBlock>
+  {
+    "type": "TableGroup",
+    "tables": [{ "url": "comptages_national_sample.csv" }]
+  }
+</CodeBlock>`}
+          >
+            <CodeBlock>{`{
+  "type": "TableGroup",
+  "tables": [{ "url": "comptages_national_sample.csv" }]
+}`}</CodeBlock>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── DataFileRow ───────────────────────────────────────────────── */}
+        <CatalogueSection title="DataFileRow">
+          <CatalogueExample
+            label="File list — mixed formats"
+            code={`<ul>
+  <DataFileRow format="duckdb" filename="comptages_national_silver.duckdb"
+    mimeType="application/vnd.duckdb" size="1.4 GB"
+    hash="sha256:e3b0c44298fc1c14" />
+  <DataFileRow format="parquet" filename="comptages_national_2024.parquet"
+    mimeType="application/vnd.apache.parquet" size="312 MB"
+    hash="sha256:a87ff679a2f3e71d" />
+  <DataFileRow format="csv" filename="comptages_national_sample.csv"
+    mimeType="text/csv" size="2.1 MB"
+    hash="sha256:1679091c5a880fc" />
+</ul>`}
+          >
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              <DataFileRow
+                format="duckdb"
+                filename="comptages_national_silver.duckdb"
+                mimeType="application/vnd.duckdb"
+                size="1.4 GB"
+                hash="sha256:e3b0c44298fc1c14"
+              />
+              <DataFileRow
+                format="parquet"
+                filename="comptages_national_2024.parquet"
+                mimeType="application/vnd.apache.parquet"
+                size="312 MB"
+                hash="sha256:a87ff679a2f3e71d"
+              />
+              <DataFileRow
+                format="csv"
+                filename="comptages_national_sample.csv"
+                mimeType="text/csv"
+                size="2.1 MB"
+                hash="sha256:1679091c5a880fc"
+              />
+            </ul>
+          </CatalogueExample>
+          <CatalogueExample
+            label="All format variants"
+            code={`<ul>
+  <DataFileRow format="csv"     filename="data.csv"     size="2 MB" />
+  <DataFileRow format="parquet" filename="data.parquet" size="80 MB" />
+  <DataFileRow format="duckdb"  filename="data.duckdb"  size="1.2 GB" />
+  <DataFileRow format="json"    filename="data.json"    size="420 KB" />
+  <DataFileRow format="geojson" filename="zones.geojson" size="1.1 MB" />
+  <DataFileRow format="xlsx"    filename="rapport.xlsx" size="850 KB" />
+</ul>`}
+          >
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              <DataFileRow format="csv"     filename="data.csv"      size="2 MB" />
+              <DataFileRow format="parquet" filename="data.parquet"  size="80 MB" />
+              <DataFileRow format="duckdb"  filename="data.duckdb"   size="1.2 GB" />
+              <DataFileRow format="json"    filename="data.json"     size="420 KB" />
+              <DataFileRow format="geojson" filename="zones.geojson" size="1.1 MB" />
+              <DataFileRow format="xlsx"    filename="rapport.xlsx"  size="850 KB" />
+            </ul>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── ServiceCard ───────────────────────────────────────────────── */}
+        <CatalogueSection title="ServiceCard">
+          <CatalogueExample
+            label="OpenAPI endpoint with URL"
+            code={`<ServiceCard
+  name="PostgREST API — silver layer"
+  url="https://api.odm.lu/rest/comptages_national"
+  protocol="openapi3"
+  asLink
+/>`}
+          >
+            <ServiceCard
+              name="PostgREST API — silver layer"
+              url="https://api.odm.lu/rest/comptages_national"
+              protocol="openapi3"
+              asLink
+            />
+          </CatalogueExample>
+          <CatalogueExample
+            label="All protocol variants"
+            code={`<ServiceCard name="REST API"    protocol="openapi3"  url="…" />
+<ServiceCard name="Graph API"  protocol="graphql"   url="…" />
+<ServiceCard name="RPC API"    protocol="grpc"      url="…" />
+<ServiceCard name="OData feed" protocol="odata"     url="…" />
+<ServiceCard name="SPARQL"     protocol="sparql"    url="…" />`}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <ServiceCard name="REST API — silver layer"    protocol="openapi3"  url="https://api.odm.lu/rest/example" />
+              <ServiceCard name="Graph API — gold layer"     protocol="graphql"   url="https://api.odm.lu/graphql" />
+              <ServiceCard name="RPC endpoint"               protocol="grpc"      url="grpc://api.odm.lu:443/example" />
+              <ServiceCard name="OData feed — mobility"      protocol="odata"     url="https://api.odm.lu/odata/mobility" />
+              <ServiceCard name="SPARQL endpoint — LOD"      protocol="sparql"    url="https://data.odm.lu/sparql" />
+            </div>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── SectionCard ───────────────────────────────────────────────── */}
+        <CatalogueSection title="SectionCard">
+          <CatalogueExample
+            label="Governance policy cards — ok / danger"
+            code={`<SectionCard variant="ok" title="Permissions">
+  dct:rights — usage interne ODM autorisé
+</SectionCard>
+<SectionCard variant="danger" title="Interdictions">
+  Interdiction de publication externe sans accord MDDI.
+</SectionCard>`}
+          >
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <SectionCard variant="ok" title="Permissions">
+                dct:rights — usage interne ODM autorisé
+              </SectionCard>
+              <SectionCard variant="danger" title="Interdictions">
+                Interdiction de publication externe sans accord MDDI.
+              </SectionCard>
+            </div>
+          </CatalogueExample>
+          <CatalogueExample
+            label="All variants"
+            code={`<SectionCard variant="ok"      title="Permissions">…</SectionCard>
+<SectionCard variant="warn"    title="Attention">…</SectionCard>
+<SectionCard variant="danger"  title="Interdictions">…</SectionCard>
+<SectionCard variant="info"    title="Information">…</SectionCard>
+<SectionCard variant="neutral" title="Remarque">…</SectionCard>`}
+          >
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <SectionCard variant="ok"      title="Permissions">    Usage interne ODM autorisé.</SectionCard>
+              <SectionCard variant="warn"    title="Attention">      Diffusion soumise à accord MDDI.</SectionCard>
+              <SectionCard variant="danger"  title="Interdictions">  Publication externe interdite sans accord.</SectionCard>
+              <SectionCard variant="info"    title="Information">    Données sous licence CC-BY 4.0.</SectionCard>
+              <SectionCard variant="neutral" title="Remarque">       Archivé depuis janvier 2024.</SectionCard>
+            </div>
+          </CatalogueExample>
+          <CatalogueExample
+            label="With headerRight slot"
+            code={`<SectionCard variant="info" title="Couverture temporelle" headerRight={<Badge variant="info">2019–2025</Badge>}>
+  168 heures par semaine · mise à jour hebdomadaire.
+</SectionCard>`}
+          >
+            <SectionCard
+              variant="info"
+              title="Couverture temporelle"
+              headerRight={<Badge variant="info">2019–2025</Badge>}
+            >
+              168 heures par semaine · mise à jour hebdomadaire.
+            </SectionCard>
+          </CatalogueExample>
+        </CatalogueSection>
+
+        {/* ── ActivityTimeline ──────────────────────────────────────────── */}
+        <CatalogueSection title="ActivityTimeline">
+          <CatalogueExample
+            label="PROV-O journal — mixed activity types"
+            code={`<ActivityTimeline note="Journal PROV-O complet — toutes les activités.">
+  <ActivityTimeline.Item
+    type="transformation"
+    description="Consolidation hebdomadaire bronze→silver. 168 heures traitées, 0.4% imputées."
+    date="17 avr. 2025"
+  />
+  <ActivityTimeline.Item
+    type="dissemination"
+    description="Export pour rapport mobilité T1 2025."
+    date="8 mars 2025"
+  />
+  <ActivityTimeline.Item
+    type="transformation"
+    description="Consolidation hebdomadaire bronze→silver."
+    date="1 mars 2025"
+  />
+  <ActivityTimeline.Item
+    type="dissemination"
+    description="Extraction pour analyse congestion Kirchberg."
+    date="14 janv. 2025"
+  />
+  <ActivityTimeline.Item
+    type="reception"
+    description="Ingestion initiale des capteurs SEBES réseau national."
+    date="3 janv. 2024"
+  />
+</ActivityTimeline>`}
+          >
+            <div style={{ maxWidth: 620 }}>
+              <ActivityTimeline note="Journal PROV-O complet — toutes les activités (réceptions, transformations, disséminations), tous les nœuds.">
+                <ActivityTimeline.Item
+                  type="transformation"
+                  description="Consolidation hebdomadaire bronze→silver. 168 heures traitées, 0.4% imputées."
+                  date="17 avr. 2025"
+                />
+                <ActivityTimeline.Item
+                  type="dissemination"
+                  description="Export pour rapport mobilité T1 2025."
+                  date="8 mars 2025"
+                />
+                <ActivityTimeline.Item
+                  type="transformation"
+                  description="Consolidation hebdomadaire bronze→silver."
+                  date="1 mars 2025"
+                />
+                <ActivityTimeline.Item
+                  type="dissemination"
+                  description="Extraction pour analyse congestion Kirchberg."
+                  date="14 janv. 2025"
+                />
+                <ActivityTimeline.Item
+                  type="transformation"
+                  description="Consolidation hebdomadaire bronze→silver."
+                  date="15 déc. 2024"
+                />
+                <ActivityTimeline.Item
+                  type="dissemination"
+                  description="Note MDDI — mobilité transfrontalière 2024."
+                  date="3 déc. 2024"
+                />
+                <ActivityTimeline.Item
+                  type="reception"
+                  description="Ingestion initiale des capteurs SEBES — réseau national."
+                  date="3 janv. 2024"
+                />
+              </ActivityTimeline>
+            </div>
+          </CatalogueExample>
+          <CatalogueExample
+            label="All type variants"
+            code={`<ActivityTimeline>
+  <ActivityTimeline.Item type="transformation" description="…" date="…" />
+  <ActivityTimeline.Item type="dissemination"  description="…" date="…" />
+  <ActivityTimeline.Item type="reception"      description="…" date="…" />
+  <ActivityTimeline.Item type="validation"     description="…" date="…" />
+</ActivityTimeline>`}
+          >
+            <div style={{ maxWidth: 540 }}>
+              <ActivityTimeline>
+                <ActivityTimeline.Item type="transformation" description="Pipeline bronze→silver exécuté avec succès." date="17 avr. 2025" />
+                <ActivityTimeline.Item type="dissemination"  description="Données partagées avec partenaire SEBES."    date="8 mars 2025" />
+                <ActivityTimeline.Item type="reception"      description="Réception des fichiers source hebdomadaires." date="1 mars 2025" />
+                <ActivityTimeline.Item type="validation"     description="Contrôle qualité ISO 19157 — 0 anomalies."   date="14 fév. 2025" />
+              </ActivityTimeline>
             </div>
           </CatalogueExample>
         </CatalogueSection>

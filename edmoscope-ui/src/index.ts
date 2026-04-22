@@ -135,6 +135,9 @@ export type { TierBadgeProps }    from "./data/TierBadge.tsx";
 export { SqlWorkbench }           from "./data/SqlWorkbench.tsx";
 export type { SqlWorkbenchProps, SqlSnippet, RetentionStatus, RetentionStatusFlags, SnippetOrder, ResultRow, DrawerState } from "./data/SqlWorkbench.tsx";
 
+export { CodeBlock }               from "./data/CodeBlock.tsx";
+export type { CodeBlockProps, CodeBlockSize } from "./data/CodeBlock.tsx";
+
 // ── Cards ─────────────────────────────────────────────────────────────────────
 export { EntryCard }               from "./cards/EntryCard.tsx";
 export type { EntryCardProps, EntryCardStatus } from "./cards/EntryCard.tsx";
@@ -144,6 +147,21 @@ export type { StackPanelProps }    from "./cards/StackPanel.tsx";
 
 export { ProvenanceCard }          from "./cards/ProvenanceCard.tsx";
 export type { ProvenanceCardProps, ProvenanceAccent, ProvenancePanelEntry } from "./cards/ProvenanceCard.tsx";
+
+export { AssetHeader }             from "./cards/AssetHeader.tsx";
+export type { AssetHeaderProps, AssetStatus } from "./cards/AssetHeader.tsx";
+
+export { DataFileRow }             from "./cards/DataFileRow.tsx";
+export type { DataFileRowProps, DataFileFormat } from "./cards/DataFileRow.tsx";
+
+export { ServiceCard }             from "./cards/ServiceCard.tsx";
+export type { ServiceCardProps, ServiceProtocol } from "./cards/ServiceCard.tsx";
+
+export { ActivityTimeline }        from "./cards/ActivityTimeline.tsx";
+export type { ActivityTimelineProps, ActivityItemProps, ActivityType } from "./cards/ActivityTimeline.tsx";
+
+export { SectionCard }             from "./cards/SectionCard.tsx";
+export type { SectionCardProps, SectionCardVariant } from "./cards/SectionCard.tsx";
 
 // ── Overlays ──────────────────────────────────────────────────────────────────
 export { Modal }                  from "./overlays/Modal.tsx";
