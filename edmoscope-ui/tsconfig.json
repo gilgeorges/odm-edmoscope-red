@@ -21,5 +21,5 @@
       "@edmoscope-ui/*": ["./src/*"]
     }
   },
-  "include": ["src", "catalogue", "tokens.ts", "tailwind.config.ts"]
+  "include": ["src", "catalogue", "types", "mocks", "pages", "tokens.ts", "tailwind.config.ts"]
 }
