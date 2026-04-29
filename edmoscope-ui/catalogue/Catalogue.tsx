@@ -1135,6 +1135,39 @@ export default function Catalogue(): React.ReactElement {
               </TopNavShell>
             </div>
           </CatalogueExample>
+
+          <CatalogueExample
+            label="With notification bar — degraded service alert"
+            code={`<TopNavShell
+  notificationMessage="The data platform is currently unavailable. Some features may not work."
+  nav={
+    <>
+      <NavTab label="Home"    onClick={() => navigate("/")} />
+      <NavTab label="Data"    isActive onClick={() => navigate("/data")} />
+      <NavTab label="Actors"  onClick={() => navigate("/actors")} />
+    </>
+  }
+>
+  <Outlet />
+</TopNavShell>`}
+          >
+            <div style={{ height: 180, overflow: "hidden", border: "1px solid #D0D0CC" }}>
+              <TopNavShell
+                notificationMessage="The data platform is currently unavailable. Some features may not work."
+                nav={
+                  <>
+                    <NavTab label="Home"   onClick={() => undefined} />
+                    <NavTab label="Data"   isActive onClick={() => undefined} />
+                    <NavTab label="Actors" onClick={() => undefined} />
+                  </>
+                }
+              >
+                <div style={{ padding: 24, fontFamily: "Montserrat, sans-serif", color: "#5A5A59", fontSize: 13 }}>
+                  Page content area
+                </div>
+              </TopNavShell>
+            </div>
+          </CatalogueExample>
         </CatalogueSection>
 
         {/* ── Navigation: NavTab ───────────────────────────────────────── */}

@@ -71,6 +71,16 @@ export interface TopNavShellProps {
    * @default ""
    */
   drawerClearance?: string;
+  /**
+   * Optional status / alert message shown in a full-width amber bar above the
+   * nav tabs. Intended for degraded-service notices, maintenance windows, etc.
+   * When omitted (or an empty string) the bar is not rendered and the layout
+   * is completely undisturbed.
+   *
+   * @example
+   * notificationMessage="The data platform is currently unavailable. Some features may not work."
+   */
+  notificationMessage?: string;
   /** Page content rendered in the scrollable main area below the nav bar. */
   children: React.ReactNode;
 }
@@ -82,6 +92,7 @@ export function TopNavShell({
   actions,
   drawer,
   drawerClearance = "",
+  notificationMessage,
   children,
 }: TopNavShellProps): React.ReactElement {
   return (
@@ -104,6 +115,17 @@ export function TopNavShell({
         role="banner"
         className="sticky top-0 z-[100] flex-shrink-0 bg-odm-ink"
       >
+        {/* Notification / degraded-service banner */}
+        {notificationMessage && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="w-full bg-amber-100 border-b border-amber-300 px-4 py-2 text-sm text-amber-900 text-center font-sans"
+          >
+            {notificationMessage}
+          </div>
+        )}
+
         <div className="flex items-stretch h-11 px-7 overflow-x-auto [scrollbar-width:none]">
 
           {/* Logo */}
