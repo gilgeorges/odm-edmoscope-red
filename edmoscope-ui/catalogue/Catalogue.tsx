@@ -67,9 +67,23 @@ function CatalogueShell({ children }: { children: React.ReactNode }): React.Reac
   return (
     <AppShell
       navBrand={
-        <div className="flex items-center gap-2.5">
-          <span className="text-white/90 font-bold text-sm tracking-tight">EDMoScope UI</span>
-          <span className="text-white/25 text-[10px] font-medium tracking-[0.1em] uppercase">Catalogue</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-white/90 font-bold text-sm tracking-tight">EDMoScope UI</span>
+            <span className="text-white/25 text-[10px] font-medium tracking-[0.1em] uppercase">Catalogue</span>
+          </div>
+          <span className="text-white/20 select-none">·</span>
+          <a
+            href="#/demo"
+            className={[
+              "font-sans text-[11px] text-white/40 hover:text-white/70",
+              "transition-colors whitespace-nowrap",
+              "focus-visible:outline focus-visible:outline-2",
+              "focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
+            ].join(" ")}
+          >
+            App Demo →
+          </a>
         </div>
       }
       navigation={CAT_NAV}
