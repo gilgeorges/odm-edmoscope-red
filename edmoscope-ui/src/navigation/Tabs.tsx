@@ -51,10 +51,15 @@ export interface TabProps {
   id: string;
   /** Tab label text. */
   children: React.ReactNode;
+  /**
+   * Optional icon rendered to the left of the label. Accepts any React node —
+   * typically a small SVG element or an {@link Icon} component.
+   */
+  icon?: React.ReactNode;
 }
 
 /** A single tab button. */
-function Tab({ id, children }: TabProps): React.ReactElement {
+function Tab({ id, children, icon }: TabProps): React.ReactElement {
   const { activeId, setActiveId, baseId } = useTabs();
   const isActive = activeId === id;
   return (
@@ -68,6 +73,7 @@ function Tab({ id, children }: TabProps): React.ReactElement {
       onClick={() => setActiveId(id)}
       className={[
         "font-sans text-[13px] whitespace-nowrap flex-shrink-0",
+        "inline-flex items-center gap-1.5",
         "py-2 pr-5 -mb-px cursor-pointer bg-transparent border-0",
         "transition-colors duration-100",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-lux-red focus-visible:outline-offset-[-2px]",
@@ -76,6 +82,11 @@ function Tab({ id, children }: TabProps): React.ReactElement {
           : "text-odm-muted font-normal border-b-2 border-b-transparent hover:text-odm-soft",
       ].join(" ")}
     >
+      {icon && (
+        <span aria-hidden="true" className="shrink-0 leading-none">
+          {icon}
+        </span>
+      )}
       {children}
     </button>
   );
